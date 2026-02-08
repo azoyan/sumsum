@@ -381,20 +381,6 @@ html, body {
   min-width: 28px;
 }
 
-/* Анимация сдвига */
-@keyframes slideIn {
-  from {
-    transform: translateX(30px);
-  }
-  to {
-    transform: translateX(0);
-  }
-}
-
-.carousel-item.slide-in {
-  animation: slideIn 0.3s ease-out;
-}
-
 #selected-sum-display {
   font-size: 14px;
   color: var(--text-secondary);

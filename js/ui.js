@@ -464,14 +464,6 @@ class GameUI {
     this.dom.currentTarget.textContent = targets[0] || '?';
     this.dom.nextTarget1.textContent = targets[1] || '–';
     this.dom.nextTarget2.textContent = targets[2] || '–';
-
-    // Плавный сдвиг всех элементов
-    const items = [this.dom.nextTarget2, this.dom.nextTarget1, this.dom.currentTarget];
-    items.forEach(el => {
-      el.classList.remove('slide-in');
-      void el.offsetWidth;
-      el.classList.add('slide-in');
-    });
   }
 
   /**
