@@ -100,17 +100,15 @@
   <div id="game-screen" class="screen">
     <!-- Верхняя панель -->
     <div id="game-header">
-      <div id="target-display">
-        <div id="current-target-label">ЦЕЛЬ</div>
-        <div id="current-target">15</div>
-        <div id="selected-sum-display">Выбрано: <span id="selected-sum">0</span></div>
+      <div id="current-target-label">ЦЕЛЬ</div>
+      <div id="target-carousel">
+        <div class="carousel-track">
+          <span id="current-target" class="carousel-item carousel-current">15</span>
+          <span id="next-target-1" class="carousel-item carousel-next1">20</span>
+          <span id="next-target-2" class="carousel-item carousel-next2">25</span>
+        </div>
       </div>
-      <div id="next-targets">
-        <span class="next-label">Далее:</span>
-        <span id="next-target-1" class="next-target">20</span>
-        <span class="next-arrow">→</span>
-        <span id="next-target-2" class="next-target">25</span>
-      </div>
+      <div id="selected-sum-display">Выбрано: <span id="selected-sum">0</span></div>
     </div>
 
     <!-- Очереди кубиков -->

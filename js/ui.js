@@ -36,8 +36,12 @@ class GameUI {
     this.lastFpsTime = 0;
     this.currentFps = 60;
 
+    // Карусель целей
+    this._isSliding = false;
+
     // DOM-элементы
     this.dom = {
+      carouselTrack: document.querySelector('.carousel-track'),
       currentTarget: document.getElementById('current-target'),
       selectedSum: document.getElementById('selected-sum'),
       selectedSumDisplay: document.getElementById('selected-sum-display'),
@@ -455,18 +459,65 @@ class GameUI {
   // ===== Обновление DOM =====
 
   /**
-   * Обновить отображение целей
+   * Обновить отображение целей с анимацией карусели
    */
   updateTargets() {
     const targets = this.game.targets;
-    this.dom.currentTarget.textContent = targets[0] || '?';
-    this.dom.nextTarget1.textContent = targets[1] || '–';
-    this.dom.nextTarget2.textContent = targets[2] || '–';
+    const track = this.dom.carouselTrack;
 
-    // Анимация смены цели
-    this.dom.currentTarget.classList.remove('anim-target-change');
-    void this.dom.currentTarget.offsetWidth; // reflow
-    this.dom.currentTarget.classList.add('anim-target-change');
+    if (this._isSliding) {
+      // Если уже анимируется — просто обновить текст
+      this.dom.currentTarget.textContent = targets[0] || '?';
+      this.dom.nextTarget1.textContent = targets[1] || '–';
+      this.dom.nextTarget2.textContent = targets[2] || '–';
+      return;
+    }
+
+    this._isSliding = true;
+
+    // 1. Создаём «входящий» элемент справа (новая 3-я цель)
+    const incoming = document.createElement('span');
+    incoming.className = 'carousel-item carousel-next2';
+    incoming.textContent = targets[2] || '–';
+    track.appendChild(incoming);
+
+    // 2. Сдвигаем трек влево на ширину текущего элемента
+    const shiftPx = this.dom.currentTarget.offsetWidth;
+    track.classList.add('sliding');
+    track.style.transform = `translateX(0px)`;
+    void track.offsetWidth; // reflow
+
+    track.classList.remove('sliding');
+    track.classList.add('sliding-animate');
+    track.style.transform = `translateX(-${shiftPx}px)`;
+
+    // 3. После завершения анимации — обновить содержимое и сбросить позицию
+    const onEnd = () => {
+      track.removeEventListener('transitionend', onEnd);
+
+      // Убираем сдвиг мгновенно
+      track.classList.remove('sliding-animate');
+      track.classList.add('sliding');
+      track.style.transform = 'translateX(0px)';
+
+      // Обновляем текст
+      this.dom.currentTarget.textContent = targets[0] || '?';
+      this.dom.nextTarget1.textContent = targets[1] || '–';
+      this.dom.nextTarget2.textContent = targets[2] || '–';
+
+      // Удаляем лишний элемент
+      if (incoming.parentNode) incoming.parentNode.removeChild(incoming);
+
+      track.classList.remove('sliding');
+      this._isSliding = false;
+    };
+
+    track.addEventListener('transitionend', onEnd);
+
+    // Fallback: если transitionend не сработал
+    setTimeout(() => {
+      if (this._isSliding) onEnd();
+    }, 600);
   }
 
   /**

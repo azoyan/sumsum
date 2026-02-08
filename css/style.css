@@ -330,29 +330,78 @@ html, body {
   z-index: 10;
 }
 
-#target-display {
-  margin-bottom: 4px;
-}
-
 #current-target-label {
   font-size: 11px;
   text-transform: uppercase;
   letter-spacing: 2px;
   color: var(--text-secondary);
+  margin-bottom: 2px;
 }
 
-#current-target {
-  font-size: 52px;
+/* --- Карусель целей (эффект колеса) --- */
+#target-carousel {
+  position: relative;
+  overflow: hidden;
+  height: 62px;
+  margin: 0 auto 2px;
+  max-width: 320px;
+}
+
+.carousel-track {
+  display: flex;
+  align-items: center;
+  height: 100%;
+  transition: transform 0.45s cubic-bezier(0.4, 0, 0.15, 1);
+  will-change: transform;
+}
+
+.carousel-item {
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
   font-weight: 800;
+  transition: opacity 0.45s ease, transform 0.45s ease, color 0.45s ease, text-shadow 0.45s ease;
+}
+
+.carousel-current {
+  width: 100px;
+  font-size: 52px;
   color: var(--accent-green);
-  line-height: 1.1;
+  opacity: 1;
   text-shadow: 0 0 30px rgba(74, 222, 128, 0.3);
+}
+
+.carousel-next1 {
+  width: 80px;
+  font-size: 32px;
+  color: var(--accent-blue);
+  opacity: 0.4;
+  text-shadow: none;
+}
+
+.carousel-next2 {
+  width: 70px;
+  font-size: 24px;
+  color: var(--accent-blue);
+  opacity: 0.2;
+  text-shadow: none;
+}
+
+/* Анимация сдвига (slide-in) */
+.carousel-track.sliding {
+  transition: none;
+}
+
+.carousel-track.sliding-animate {
+  transition: transform 0.45s cubic-bezier(0.4, 0, 0.15, 1);
 }
 
 #selected-sum-display {
   font-size: 14px;
   color: var(--text-secondary);
   margin-top: 2px;
+  text-align: center;
 }
 
 #selected-sum-display .match {
@@ -363,33 +412,6 @@ html, body {
 #selected-sum-display .over {
   color: var(--accent-red);
   font-weight: 700;
-}
-
-#next-targets {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: 8px;
-  margin-top: 4px;
-}
-
-.next-label {
-  font-size: 12px;
-  color: var(--text-secondary);
-}
-
-.next-target {
-  font-size: 18px;
-  font-weight: 700;
-  color: var(--accent-blue);
-  background: var(--bg-card);
-  padding: 2px 12px;
-  border-radius: 8px;
-}
-
-.next-arrow {
-  color: var(--text-secondary);
-  font-size: 14px;
 }
 
 /* Очереди кубиков */
