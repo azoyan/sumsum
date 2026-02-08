@@ -1,0 +1,137 @@
+/* ===== SumSum — CSS-анимации ===== */
+
+/* Пульсация */
+@keyframes pulse {
+  0% { opacity: 1; }
+  100% { opacity: 0.5; }
+}
+
+/* Появление экрана */
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(20px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes fadeOut {
+  from { opacity: 1; transform: translateY(0); }
+  to { opacity: 0; transform: translateY(-20px); }
+}
+
+/* Масштабирование при появлении */
+@keyframes scaleIn {
+  from { opacity: 0; transform: scale(0.8); }
+  to { opacity: 1; transform: scale(1); }
+}
+
+/* Дрожание колонки */
+@keyframes shake {
+  0%, 100% { transform: translateX(0); }
+  20% { transform: translateX(-3px); }
+  40% { transform: translateX(3px); }
+  60% { transform: translateX(-2px); }
+  80% { transform: translateX(2px); }
+}
+
+/* Вспышка при сборе суммы */
+@keyframes flash {
+  0% { background-color: rgba(74, 222, 128, 0.4); }
+  100% { background-color: transparent; }
+}
+
+/* Всплывание очков */
+@keyframes floatUp {
+  0% {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+  50% {
+    opacity: 1;
+    transform: translateY(-30px) scale(1.2);
+  }
+  100% {
+    opacity: 0;
+    transform: translateY(-60px) scale(0.8);
+  }
+}
+
+/* Bounce при появлении кубика */
+@keyframes bounceIn {
+  0% { transform: scale(0); }
+  50% { transform: scale(1.15); }
+  70% { transform: scale(0.95); }
+  100% { transform: scale(1); }
+}
+
+/* Вращение при уничтожении */
+@keyframes spinOut {
+  0% {
+    transform: rotate(0) scale(1);
+    opacity: 1;
+  }
+  100% {
+    transform: rotate(360deg) scale(0);
+    opacity: 0;
+  }
+}
+
+/* Светящаяся рамка для выбранных кубиков */
+@keyframes glowPulse {
+  0% { box-shadow: 0 0 5px rgba(251, 146, 60, 0.5); }
+  100% { box-shadow: 0 0 20px rgba(251, 146, 60, 0.8); }
+}
+
+/* Движение текста цели при смене */
+@keyframes targetChange {
+  0% { transform: scale(1); }
+  30% { transform: scale(1.2); }
+  100% { transform: scale(1); }
+}
+
+/* Комбо-анимация */
+@keyframes comboFlash {
+  0% { transform: scale(1); color: var(--accent-orange); }
+  50% { transform: scale(1.3); color: var(--accent-yellow); }
+  100% { transform: scale(1); color: var(--accent-orange); }
+}
+
+/* Анимации для использования в JS */
+.anim-fade-in {
+  animation: fadeIn 0.3s ease forwards;
+}
+
+.anim-fade-out {
+  animation: fadeOut 0.3s ease forwards;
+}
+
+.anim-scale-in {
+  animation: scaleIn 0.3s ease forwards;
+}
+
+.anim-shake {
+  animation: shake 0.4s ease;
+}
+
+.anim-bounce-in {
+  animation: bounceIn 0.3s ease forwards;
+}
+
+.anim-spin-out {
+  animation: spinOut 0.4s ease forwards;
+}
+
+.anim-target-change {
+  animation: targetChange 0.4s ease;
+}
+
+.anim-combo-flash {
+  animation: comboFlash 0.5s ease;
+}
+
+/* Плавное появление/скрытие оверлея */
+.overlay.showing {
+  animation: fadeIn 0.3s ease forwards;
+}
+
+.overlay.hiding {
+  animation: fadeOut 0.3s ease forwards;
+}

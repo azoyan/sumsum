@@ -1,0 +1,199 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no, maximum-scale=1.0">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="mobile-web-app-capable" content="yes">
+  <title>SumSum — Математическая головоломка</title>
+  <link rel="stylesheet" href="css/style.css">
+  <link rel="stylesheet" href="css/animations.css">
+  <link rel="stylesheet" href="css/responsive.css">
+</head>
+<body>
+  <!-- Экран меню -->
+  <div id="menu-screen" class="screen active">
+    <div class="menu-container">
+      <h1 class="game-title">Sum<span class="accent">Sum</span></h1>
+      <p class="game-subtitle">Математическая головоломка</p>
+      <div class="menu-buttons">
+        <button id="btn-play" class="btn btn-primary">Играть</button>
+        <button id="btn-how-to-play" class="btn btn-secondary">Как играть</button>
+        <button id="btn-settings" class="btn btn-secondary">Настройки</button>
+      </div>
+      <div class="menu-stats">
+        <div class="stat-item">
+          <span class="stat-label">Рекорд</span>
+          <span id="menu-high-score" class="stat-value">0</span>
+        </div>
+        <div class="stat-item">
+          <span class="stat-label">Игры</span>
+          <span id="menu-total-games" class="stat-value">0</span>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Экран обучения -->
+  <div id="tutorial-screen" class="screen">
+    <div class="tutorial-container">
+      <h2>Как играть</h2>
+      <div class="tutorial-steps">
+        <div class="tutorial-step">
+          <div class="tutorial-icon">🎯</div>
+          <p>Цель — собрать <strong>целевую сумму</strong>, показанную вверху экрана</p>
+        </div>
+        <div class="tutorial-step">
+          <div class="tutorial-icon">👆</div>
+          <p>Нажимайте на <strong>кубики с числами</strong>, чтобы выбрать их</p>
+        </div>
+        <div class="tutorial-step">
+          <div class="tutorial-icon">✨</div>
+          <p>Когда сумма выбранных кубиков совпадёт с целью — они <strong>исчезнут</strong></p>
+        </div>
+        <div class="tutorial-step">
+          <div class="tutorial-icon">⚠️</div>
+          <p>Не дайте колонкам <strong>переполниться</strong> — максимум 8 кубиков!</p>
+        </div>
+        <div class="tutorial-step">
+          <div class="tutorial-icon">🔥</div>
+          <p>Собирайте <strong>комбо</strong> подряд для увеличения множителя очков!</p>
+        </div>
+      </div>
+      <button id="btn-tutorial-back" class="btn btn-primary">Понятно!</button>
+    </div>
+  </div>
+
+  <!-- Экран настроек -->
+  <div id="settings-screen" class="screen">
+    <div class="settings-container">
+      <h2>Настройки</h2>
+      <div class="settings-list">
+        <div class="setting-item">
+          <span>Звук</span>
+          <label class="toggle">
+            <input type="checkbox" id="setting-sound" checked>
+            <span class="toggle-slider"></span>
+          </label>
+        </div>
+        <div class="setting-item">
+          <span>Вибрация</span>
+          <label class="toggle">
+            <input type="checkbox" id="setting-vibration" checked>
+            <span class="toggle-slider"></span>
+          </label>
+        </div>
+        <div class="setting-item">
+          <span>Сложность</span>
+          <select id="setting-difficulty" class="select-input">
+            <option value="easy">Легко</option>
+            <option value="medium" selected>Нормально</option>
+            <option value="hard">Сложно</option>
+          </select>
+        </div>
+      </div>
+      <button id="btn-settings-back" class="btn btn-primary">Назад</button>
+    </div>
+  </div>
+
+  <!-- Экран игры -->
+  <div id="game-screen" class="screen">
+    <!-- Верхняя панель -->
+    <div id="game-header">
+      <div id="target-display">
+        <div id="current-target-label">ЦЕЛЬ</div>
+        <div id="current-target">15</div>
+        <div id="selected-sum-display">Выбрано: <span id="selected-sum">0</span></div>
+      </div>
+      <div id="next-targets">
+        <span class="next-label">Далее:</span>
+        <span id="next-target-1" class="next-target">20</span>
+        <span class="next-arrow">→</span>
+        <span id="next-target-2" class="next-target">25</span>
+      </div>
+    </div>
+
+    <!-- Очереди кубиков -->
+    <div id="queues-display">
+      <div class="queue-item" data-col="0"></div>
+      <div class="queue-item" data-col="1"></div>
+      <div class="queue-item" data-col="2"></div>
+      <div class="queue-item" data-col="3"></div>
+    </div>
+
+    <!-- Игровое поле -->
+    <div id="game-field">
+      <canvas id="game-canvas"></canvas>
+      <!-- Индикаторы опасности колонок -->
+      <div id="column-dangers">
+        <div class="col-danger" data-col="0"></div>
+        <div class="col-danger" data-col="1"></div>
+        <div class="col-danger" data-col="2"></div>
+        <div class="col-danger" data-col="3"></div>
+      </div>
+    </div>
+
+    <!-- Нижняя панель -->
+    <div id="game-footer">
+      <div id="score-display">
+        <span class="footer-label">Счёт</span>
+        <span id="score-value">0</span>
+      </div>
+      <div id="combo-display" class="hidden">
+        <span id="combo-value">×1.5</span>
+        <span class="footer-label">КОМБО</span>
+      </div>
+      <div id="level-display">
+        <span class="footer-label">Уровень</span>
+        <span id="level-value">1</span>
+      </div>
+      <div id="game-controls">
+        <button id="btn-pause" class="btn-icon" title="Пауза">⏸</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Экран паузы -->
+  <div id="pause-overlay" class="overlay hidden">
+    <div class="overlay-content">
+      <h2>Пауза</h2>
+      <button id="btn-resume" class="btn btn-primary">Продолжить</button>
+      <button id="btn-restart" class="btn btn-secondary">Новая игра</button>
+      <button id="btn-quit" class="btn btn-secondary">В меню</button>
+    </div>
+  </div>
+
+  <!-- Экран конца игры -->
+  <div id="gameover-overlay" class="overlay hidden">
+    <div class="overlay-content gameover-content">
+      <h2>Игра окончена</h2>
+      <div class="gameover-stats">
+        <div class="go-stat">
+          <span class="go-stat-label">Счёт</span>
+          <span id="go-score" class="go-stat-value">0</span>
+        </div>
+        <div class="go-stat">
+          <span class="go-stat-label">Уровень</span>
+          <span id="go-level" class="go-stat-value">1</span>
+        </div>
+        <div class="go-stat">
+          <span class="go-stat-label">Рекорд</span>
+          <span id="go-highscore" class="go-stat-value">0</span>
+        </div>
+        <div id="go-new-record" class="hidden">🎉 Новый рекорд!</div>
+      </div>
+      <button id="btn-play-again" class="btn btn-primary">Играть снова</button>
+      <button id="btn-go-menu" class="btn btn-secondary">В меню</button>
+    </div>
+  </div>
+
+  <!-- FPS-счётчик (debug) -->
+  <div id="fps-counter" class="hidden">FPS: 60</div>
+
+  <script src="js/utils.js"></script>
+  <script src="js/storage.js"></script>
+  <script src="js/generator.js"></script>
+  <script src="js/ui.js"></script>
+  <script src="js/game.js"></script>
+</body>
+</html>
