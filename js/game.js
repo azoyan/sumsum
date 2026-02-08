@@ -409,7 +409,7 @@ class SumSumGame {
   _updateSpawn(timestamp) {
     const config = getLevelConfig(this.level);
     const interval = config.spawnInterval;
-    const shakeTime = 500; // мс дрожания перед падением
+    const shakeTime = Math.max(800, Math.floor(interval * 0.7)); // дрожание начинается рано
     const elapsed = timestamp - this.lastSpawnTime;
 
     // Начать дрожание за shakeTime до спауна
@@ -532,6 +532,7 @@ class SumSumGame {
 
     // UI
     this.ui.updateQueues();
+    this.ui.animateQueueAppear(col);
     this.ui.updateColumnDangers();
 
     // Предупреждение

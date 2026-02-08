@@ -303,33 +303,27 @@ class GameUI {
     ctx.shadowBlur = 6;
     ctx.shadowOffsetY = 2;
 
+    // Цвета: выбранный кубик — белый с чёрной цифрой
+    const bg = cube.selected ? '#ffffff' : colors.bg;
+    const border = cube.selected ? '#cccccc' : colors.border;
+    const text = cube.selected ? '#000000' : colors.text;
+
     // Фон кубика
-    ctx.fillStyle = colors.bg;
+    ctx.fillStyle = bg;
     this._roundRect(ctx, x, y, size, size, r);
     ctx.fill();
 
     ctx.shadowColor = 'transparent';
 
     // Рамка
-    ctx.strokeStyle = colors.border;
-    ctx.lineWidth = 2;
+    ctx.strokeStyle = border;
+    ctx.lineWidth = cube.selected ? 3 : 2;
     this._roundRect(ctx, x, y, size, size, r);
     ctx.stroke();
 
-    // Подсветка выбранного
-    if (cube.selected) {
-      ctx.strokeStyle = '#fb923c';
-      ctx.lineWidth = 3;
-      ctx.shadowColor = 'rgba(251, 146, 60, 0.6)';
-      ctx.shadowBlur = 12;
-      this._roundRect(ctx, x - 1, y - 1, size + 2, size + 2, r + 1);
-      ctx.stroke();
-      ctx.shadowColor = 'transparent';
-    }
-
     // Число
     const fontSize = Math.max(16, Math.floor(size * 0.45));
-    ctx.fillStyle = colors.text;
+    ctx.fillStyle = text;
     ctx.font = `bold ${fontSize}px ${getComputedStyle(document.body).fontFamily}`;
     ctx.textAlign = 'center';
     ctx.textBaseline = 'middle';
@@ -534,6 +528,22 @@ class GameUI {
         el.style.borderColor = 'rgba(255, 255, 255, 0.1)';
       }
     });
+  }
+
+  /**
+   * Анимация появления нового блока в очереди
+   * @param {number} colIdx
+   */
+  animateQueueAppear(colIdx) {
+    const el = this.dom.queueItems[colIdx];
+    if (!el) return;
+    el.classList.remove('appearing');
+    // force reflow to restart animation
+    void el.offsetWidth;
+    el.classList.add('appearing');
+    el.addEventListener('animationend', () => {
+      el.classList.remove('appearing');
+    }, { once: true });
   }
 
   /**
