@@ -36,12 +36,8 @@ class GameUI {
     this.lastFpsTime = 0;
     this.currentFps = 60;
 
-    // Карусель целей
-    this._isSliding = false;
-
     // DOM-элементы
     this.dom = {
-      carouselTrack: document.querySelector('.carousel-track'),
       currentTarget: document.getElementById('current-target'),
       selectedSum: document.getElementById('selected-sum'),
       selectedSumDisplay: document.getElementById('selected-sum-display'),
@@ -459,66 +455,24 @@ class GameUI {
   // ===== Обновление DOM =====
 
   /**
-   * Обновить отображение целей с анимацией карусели
+   * Обновить отображение целей с плавной анимацией сдвига
    */
   updateTargets() {
     const targets = this.game.targets;
-    const track = this.dom.carouselTrack;
+    const items = [this.dom.nextTarget2, this.dom.nextTarget1, this.dom.currentTarget];
 
-    if (this._isSliding) {
-      // Если уже анимируется — просто обновить текст
-      this.dom.currentTarget.textContent = targets[0] || '?';
-      this.dom.nextTarget1.textContent = targets[1] || '–';
-      this.dom.nextTarget2.textContent = targets[2] || '–';
-      return;
-    }
+    // Обновляем текст
+    this.dom.currentTarget.textContent = targets[0] || '?';
+    this.dom.nextTarget1.textContent = targets[1] || '–';
+    this.dom.nextTarget2.textContent = targets[2] || '–';
 
-    this._isSliding = true;
-
-    // 1. Вставляем «входящий» элемент слева (новая дальняя цель)
-    const incoming = document.createElement('span');
-    incoming.className = 'carousel-item carousel-next2';
-    incoming.textContent = targets[2] || '–';
-    track.insertBefore(incoming, track.firstChild);
-
-    // 2. Мгновенно сдвигаем трек влево на ширину входящего элемента
-    //    (чтобы визуально ничего не изменилось)
-    const shiftPx = incoming.offsetWidth;
-    track.classList.add('sliding');
-    track.style.transform = `translateX(-${shiftPx}px)`;
-    void track.offsetWidth; // reflow
-
-    // 3. Анимируем сдвиг обратно к 0 (трек едет вправо → цели «въезжают»)
-    track.classList.remove('sliding');
-    track.classList.add('sliding-animate');
-    track.style.transform = 'translateX(0px)';
-
-    // 4. После завершения анимации — обновить содержимое
-    const onEnd = () => {
-      track.removeEventListener('transitionend', onEnd);
-
-      track.classList.remove('sliding-animate');
-      track.classList.add('sliding');
-      track.style.transform = 'translateX(0px)';
-
-      // Обновляем текст
-      this.dom.currentTarget.textContent = targets[0] || '?';
-      this.dom.nextTarget1.textContent = targets[1] || '–';
-      this.dom.nextTarget2.textContent = targets[2] || '–';
-
-      // Удаляем лишний элемент
-      if (incoming.parentNode) incoming.parentNode.removeChild(incoming);
-
-      track.classList.remove('sliding');
-      this._isSliding = false;
-    };
-
-    track.addEventListener('transitionend', onEnd);
-
-    // Fallback
-    setTimeout(() => {
-      if (this._isSliding) onEnd();
-    }, 600);
+    // Запускаем анимацию slide-in на каждом элементе с небольшой задержкой
+    items.forEach((el, i) => {
+      el.classList.remove('slide-in');
+      void el.offsetWidth; // reflow для перезапуска анимации
+      el.style.animationDelay = (i * 0.06) + 's';
+      el.classList.add('slide-in');
+    });
   }
 
   /**

@@ -338,64 +338,73 @@ html, body {
   margin-bottom: 2px;
 }
 
-/* --- Карусель целей (эффект колеса) --- */
+/* --- Карусель целей --- */
 #target-carousel {
-  position: relative;
-  overflow: hidden;
+  display: flex;
+  align-items: baseline;
+  justify-content: flex-end;
+  gap: 6px;
   height: 62px;
   margin: 0 auto 2px;
   max-width: 320px;
-}
-
-.carousel-track {
-  display: flex;
-  align-items: center;
-  justify-content: flex-end;
-  height: 100%;
-  transition: transform 0.45s cubic-bezier(0.4, 0, 0.15, 1);
-  will-change: transform;
+  overflow: hidden;
 }
 
 .carousel-item {
   flex-shrink: 0;
-  display: flex;
-  align-items: center;
-  justify-content: center;
+  display: inline-block;
   font-weight: 800;
-  transition: opacity 0.45s ease, transform 0.45s ease, color 0.45s ease, text-shadow 0.45s ease;
+  text-align: center;
 }
 
 .carousel-current {
-  width: 100px;
   font-size: 52px;
   color: var(--accent-green);
   opacity: 1;
   text-shadow: 0 0 30px rgba(74, 222, 128, 0.3);
+  min-width: 50px;
 }
 
 .carousel-next1 {
-  width: 80px;
-  font-size: 32px;
+  font-size: 30px;
   color: var(--accent-blue);
-  opacity: 0.4;
+  opacity: 0.35;
   text-shadow: none;
+  min-width: 36px;
 }
 
 .carousel-next2 {
-  width: 70px;
-  font-size: 24px;
+  font-size: 22px;
   color: var(--accent-blue);
-  opacity: 0.2;
+  opacity: 0.15;
   text-shadow: none;
+  min-width: 28px;
 }
 
-/* Анимация сдвига (slide-in) */
-.carousel-track.sliding {
-  transition: none;
+/* Анимация сдвига: каждый элемент плавно въезжает справа */
+@keyframes slideInRight {
+  from {
+    transform: translateX(40px);
+    opacity: 0;
+  }
+  to {
+    transform: translateX(0);
+    opacity: 1;
+  }
 }
 
-.carousel-track.sliding-animate {
-  transition: transform 0.45s cubic-bezier(0.4, 0, 0.15, 1);
+.carousel-item.slide-in {
+  animation: slideInRight 0.35s ease-out forwards;
+}
+
+.carousel-next1.slide-in {
+  animation: slideInRight 0.35s ease-out forwards;
+  opacity: 0.35;
+}
+
+.carousel-next2.slide-in {
+  animation: slideInRight 0.35s ease-out forwards;
+  opacity: 0.15;
 }
 
 #selected-sum-display {
