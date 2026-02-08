@@ -94,6 +94,29 @@ class SumSumGame {
     });
 
     // Игровые кнопки
+    // Fullscreen
+    const fsBtn = document.getElementById('btn-fullscreen');
+    const fsSetting = document.getElementById('fullscreen-setting');
+    if (document.fullscreenEnabled || document.webkitFullscreenEnabled) {
+      fsSetting.style.display = '';
+      fsBtn.addEventListener('click', () => {
+        if (!document.fullscreenElement && !document.webkitFullscreenElement) {
+          const el = document.documentElement;
+          (el.requestFullscreen || el.webkitRequestFullscreen).call(el);
+          fsBtn.textContent = 'Выключить';
+        } else {
+          (document.exitFullscreen || document.webkitExitFullscreen).call(document);
+          fsBtn.textContent = 'Включить';
+        }
+      });
+      document.addEventListener('fullscreenchange', () => {
+        fsBtn.textContent = document.fullscreenElement ? 'Выключить' : 'Включить';
+      });
+      document.addEventListener('webkitfullscreenchange', () => {
+        fsBtn.textContent = document.webkitFullscreenElement ? 'Выключить' : 'Включить';
+      });
+    }
+
     document.getElementById('btn-pause').addEventListener('click', () => this.pause());
     document.getElementById('btn-resume').addEventListener('click', () => this.resume());
     document.getElementById('btn-restart').addEventListener('click', () => {

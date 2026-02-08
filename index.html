@@ -4,7 +4,12 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no, maximum-scale=1.0">
   <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
   <meta name="mobile-web-app-capable" content="yes">
+  <meta name="theme-color" content="#0f172a">
+  <link rel="manifest" href="manifest.json">
+  <link rel="icon" href="icons/icon.svg" type="image/svg+xml">
+  <link rel="apple-touch-icon" href="icons/icon.svg">
   <title>SumSum — Математическая головоломка</title>
   <link rel="stylesheet" href="css/style.css">
   <link rel="stylesheet" href="css/animations.css">
@@ -91,6 +96,10 @@
             <option value="hard">Сложно</option>
           </select>
         </div>
+      </div>
+      <div id="fullscreen-setting" class="setting-item" style="display:none">
+        <span>Полный экран</span>
+        <button id="btn-fullscreen" class="btn btn-small btn-secondary">Включить</button>
       </div>
       <button id="btn-settings-back" class="btn btn-primary">Назад</button>
     </div>
@@ -191,5 +200,10 @@
   <script src="js/generator.js"></script>
   <script src="js/ui.js"></script>
   <script src="js/game.js"></script>
+  <script>
+    if ('serviceWorker' in navigator) {
+      navigator.serviceWorker.register('sw.js').catch(() => {});
+    }
+  </script>
 </body>
 </html>

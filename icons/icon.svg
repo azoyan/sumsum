@@ -1,0 +1,5 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 192 192">
+  <rect width="192" height="192" rx="32" fill="#0f172a"/>
+  <text x="96" y="80" text-anchor="middle" font-family="Arial,sans-serif" font-size="56" font-weight="bold" fill="#818cf8">Sum</text>
+  <text x="96" y="140" text-anchor="middle" font-family="Arial,sans-serif" font-size="56" font-weight="bold" fill="#fb923c">Sum</text>
+</svg>
