@@ -381,30 +381,18 @@ html, body {
   min-width: 28px;
 }
 
-/* Анимация сдвига: каждый элемент плавно въезжает справа */
-@keyframes slideInRight {
+/* Анимация сдвига */
+@keyframes slideIn {
   from {
-    transform: translateX(40px);
-    opacity: 0;
+    transform: translateX(30px);
   }
   to {
     transform: translateX(0);
-    opacity: 1;
   }
 }
 
 .carousel-item.slide-in {
-  animation: slideInRight 0.35s ease-out forwards;
-}
-
-.carousel-next1.slide-in {
-  animation: slideInRight 0.35s ease-out forwards;
-  opacity: 0.35;
-}
-
-.carousel-next2.slide-in {
-  animation: slideInRight 0.35s ease-out forwards;
-  opacity: 0.15;
+  animation: slideIn 0.3s ease-out;
 }
 
 #selected-sum-display {

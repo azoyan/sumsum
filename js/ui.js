@@ -459,18 +459,17 @@ class GameUI {
    */
   updateTargets() {
     const targets = this.game.targets;
-    const items = [this.dom.nextTarget2, this.dom.nextTarget1, this.dom.currentTarget];
 
     // Обновляем текст
     this.dom.currentTarget.textContent = targets[0] || '?';
     this.dom.nextTarget1.textContent = targets[1] || '–';
     this.dom.nextTarget2.textContent = targets[2] || '–';
 
-    // Запускаем анимацию slide-in на каждом элементе с небольшой задержкой
-    items.forEach((el, i) => {
+    // Плавный сдвиг всех элементов
+    const items = [this.dom.nextTarget2, this.dom.nextTarget1, this.dom.currentTarget];
+    items.forEach(el => {
       el.classList.remove('slide-in');
-      void el.offsetWidth; // reflow для перезапуска анимации
-      el.style.animationDelay = (i * 0.06) + 's';
+      void el.offsetWidth;
       el.classList.add('slide-in');
     });
   }
