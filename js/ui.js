@@ -475,27 +475,28 @@ class GameUI {
 
     this._isSliding = true;
 
-    // 1. Создаём «входящий» элемент справа (новая 3-я цель)
+    // 1. Вставляем «входящий» элемент слева (новая дальняя цель)
     const incoming = document.createElement('span');
     incoming.className = 'carousel-item carousel-next2';
     incoming.textContent = targets[2] || '–';
-    track.appendChild(incoming);
+    track.insertBefore(incoming, track.firstChild);
 
-    // 2. Сдвигаем трек влево на ширину текущего элемента
-    const shiftPx = this.dom.currentTarget.offsetWidth;
+    // 2. Мгновенно сдвигаем трек влево на ширину входящего элемента
+    //    (чтобы визуально ничего не изменилось)
+    const shiftPx = incoming.offsetWidth;
     track.classList.add('sliding');
-    track.style.transform = `translateX(0px)`;
+    track.style.transform = `translateX(-${shiftPx}px)`;
     void track.offsetWidth; // reflow
 
+    // 3. Анимируем сдвиг обратно к 0 (трек едет вправо → цели «въезжают»)
     track.classList.remove('sliding');
     track.classList.add('sliding-animate');
-    track.style.transform = `translateX(-${shiftPx}px)`;
+    track.style.transform = 'translateX(0px)';
 
-    // 3. После завершения анимации — обновить содержимое и сбросить позицию
+    // 4. После завершения анимации — обновить содержимое
     const onEnd = () => {
       track.removeEventListener('transitionend', onEnd);
 
-      // Убираем сдвиг мгновенно
       track.classList.remove('sliding-animate');
       track.classList.add('sliding');
       track.style.transform = 'translateX(0px)';
@@ -514,7 +515,7 @@ class GameUI {
 
     track.addEventListener('transitionend', onEnd);
 
-    // Fallback: если transitionend не сработал
+    // Fallback
     setTimeout(() => {
       if (this._isSliding) onEnd();
     }, 600);

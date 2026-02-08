@@ -350,6 +350,7 @@ html, body {
 .carousel-track {
   display: flex;
   align-items: center;
+  justify-content: flex-end;
   height: 100%;
   transition: transform 0.45s cubic-bezier(0.4, 0, 0.15, 1);
   will-change: transform;
