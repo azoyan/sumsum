@@ -527,15 +527,31 @@ class GameUI {
         el.style.background = colors.bg;
         el.style.color = colors.text;
         el.style.borderColor = colors.border;
-        el.style.borderStyle = 'solid';
       } else {
         el.textContent = '?';
-        el.style.background = '';
-        el.style.color = '';
-        el.style.borderColor = '';
-        el.style.borderStyle = 'dashed';
+        el.style.background = 'var(--bg-card)';
+        el.style.color = 'var(--text-secondary)';
+        el.style.borderColor = 'rgba(255, 255, 255, 0.1)';
       }
     });
+  }
+
+  /**
+   * Начать дрожание блока очереди
+   * @param {number} colIdx
+   */
+  startQueueShake(colIdx) {
+    const el = this.dom.queueItems[colIdx];
+    if (el) el.classList.add('shaking');
+  }
+
+  /**
+   * Остановить дрожание блока очереди
+   * @param {number} colIdx
+   */
+  stopQueueShake(colIdx) {
+    const el = this.dom.queueItems[colIdx];
+    if (el) el.classList.remove('shaking');
   }
 
   /**

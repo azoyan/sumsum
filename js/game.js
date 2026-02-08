@@ -254,6 +254,8 @@ class SumSumGame {
     this.comboCount = 0;
     this.lastMatchTime = 0;
     this.targetsCleared = 0;
+    this._shaking = false;
+    this._pendingSpawnCol = -1;
     this.isPlaying = false;
     this.isPaused = false;
 
@@ -407,11 +409,45 @@ class SumSumGame {
   _updateSpawn(timestamp) {
     const config = getLevelConfig(this.level);
     const interval = config.spawnInterval;
+    const shakeTime = 500; // мс дрожания перед падением
+    const elapsed = timestamp - this.lastSpawnTime;
 
-    if (timestamp - this.lastSpawnTime >= interval) {
-      this.lastSpawnTime = timestamp;
-      this._spawnNextCube();
+    // Начать дрожание за shakeTime до спауна
+    if (!this._shaking && elapsed >= interval - shakeTime) {
+      this._shaking = true;
+      this._pendingSpawnCol = this._chooseSpawnColumn();
+      if (this._pendingSpawnCol !== -1) {
+        this.ui.startQueueShake(this._pendingSpawnCol);
+      }
     }
+
+    // Спаун
+    if (elapsed >= interval) {
+      this.lastSpawnTime = timestamp;
+      this._shaking = false;
+
+      if (this._pendingSpawnCol !== -1) {
+        this.ui.stopQueueShake(this._pendingSpawnCol);
+        this._spawnCubeInColumn(this._pendingSpawnCol);
+      } else {
+        this._spawnNextCube();
+      }
+      this._pendingSpawnCol = -1;
+    }
+  }
+
+  /**
+   * Выбрать колонку для спауна (без спауна)
+   * @returns {number} индекс колонки или -1 если все полные
+   * @private
+   */
+  _chooseSpawnColumn() {
+    const col = this.generator.chooseColumn();
+    if (this.columns[col].length < GAME_CONST.MAX_COLUMN_HEIGHT) return col;
+    for (let i = 0; i < GAME_CONST.NUM_COLUMNS; i++) {
+      if (this.columns[i].length < GAME_CONST.MAX_COLUMN_HEIGHT) return i;
+    }
+    return -1;
   }
 
   /**
@@ -481,6 +517,13 @@ class SumSumGame {
     const row = this.columns[col].length;
     cube.row = row;
     cube.spawnTime = performance.now();
+
+    // Кубик падает сверху (из-за пределов поля)
+    cube.falling = true;
+    cube.fallFrom = GAME_CONST.MAX_COLUMN_HEIGHT + 2; // начинает выше поля
+    cube.fallTo = row;
+    cube.fallProgress = 0;
+    cube.bounceProgress = 1; // без bounce
 
     this.columns[col].push(cube);
 
