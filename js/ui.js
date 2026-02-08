@@ -39,8 +39,6 @@ class GameUI {
     // DOM-элементы
     this.dom = {
       currentTarget: document.getElementById('current-target'),
-      selectedSum: document.getElementById('selected-sum'),
-      selectedSumDisplay: document.getElementById('selected-sum-display'),
       nextTarget1: document.getElementById('next-target-1'),
       nextTarget2: document.getElementById('next-target-2'),
       scoreValue: document.getElementById('score-value'),
@@ -461,22 +459,9 @@ class GameUI {
   }
 
   /**
-   * Обновить отображение выбранной суммы
+   * Обновить отображение выбранной суммы (no-op, display removed)
    */
   updateSelectedSum() {
-    const sum = this.game.getSelectedSum();
-    const target = this.game.targets[0];
-
-    this.dom.selectedSum.textContent = sum;
-    this.dom.selectedSum.className = '';
-
-    if (sum === 0) {
-      this.dom.selectedSumDisplay.innerHTML = `Выбрано: <span id="selected-sum">0</span>`;
-    } else if (sum === target) {
-      this.dom.selectedSum.classList.add('match');
-    } else if (sum > target) {
-      this.dom.selectedSum.classList.add('over');
-    }
   }
 
   /**
