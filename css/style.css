@@ -336,9 +336,25 @@ html, body {
 #game-header {
   width: 100%;
   padding: 12px 16px 8px;
-  text-align: center;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
   background: linear-gradient(180deg, var(--bg-secondary), transparent);
   z-index: 10;
+  position: relative;
+}
+
+.header-btn-left {
+  flex-shrink: 0;
+  font-size: 22px;
+}
+
+.header-btn-center {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  transform: translate(-50%, -50%);
+  z-index: 2;
 }
 
 /* --- Карусель целей --- */
@@ -348,7 +364,7 @@ html, body {
   justify-content: flex-end;
   gap: 8px;
   position: relative;
-  margin: 0 auto 2px;
+  margin: 0 0 2px auto;
   padding: 4px 0;
   max-width: 320px;
 }

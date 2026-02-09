@@ -96,10 +96,10 @@
             <option value="hard">Сложно</option>
           </select>
         </div>
-      </div>
-      <div id="fullscreen-setting" class="setting-item" style="display:none">
-        <span>Полный экран</span>
-        <button id="btn-fullscreen" class="btn btn-small btn-secondary">Включить</button>
+        <div id="fullscreen-setting" class="setting-item" style="display:none">
+          <span>Полный экран</span>
+          <button id="btn-fullscreen" class="btn btn-small btn-secondary">Включить</button>
+        </div>
       </div>
       <button id="btn-settings-back" class="btn btn-primary">Назад</button>
     </div>
@@ -109,6 +109,8 @@
   <div id="game-screen" class="screen">
     <!-- Верхняя панель -->
     <div id="game-header">
+      <button id="btn-fullscreen-game" class="btn-icon header-btn-left" title="Полный экран" style="display:none">⛶</button>
+      <button id="btn-pause" class="btn-icon header-btn-center" title="Пауза">⏸</button>
       <div id="target-carousel">
           <span id="next-target-2" class="carousel-item carousel-next2">25</span>
           <span id="next-target-1" class="carousel-item carousel-next1">20</span>
@@ -150,9 +152,6 @@
       <div id="level-display">
         <span class="footer-label">Уровень</span>
         <span id="level-value">1</span>
-      </div>
-      <div id="game-controls">
-        <button id="btn-pause" class="btn-icon" title="Пауза">⏸</button>
       </div>
     </div>
   </div>

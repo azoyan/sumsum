@@ -97,24 +97,31 @@ class SumSumGame {
     // Fullscreen
     const fsBtn = document.getElementById('btn-fullscreen');
     const fsSetting = document.getElementById('fullscreen-setting');
+    const fsGameBtn = document.getElementById('btn-fullscreen-game');
+
+    const toggleFullscreen = () => {
+      if (!document.fullscreenElement && !document.webkitFullscreenElement) {
+        const el = document.documentElement;
+        (el.requestFullscreen || el.webkitRequestFullscreen).call(el);
+      } else {
+        (document.exitFullscreen || document.webkitExitFullscreen).call(document);
+      }
+    };
+
+    const updateFsButtons = () => {
+      const isFs = !!(document.fullscreenElement || document.webkitFullscreenElement);
+      fsBtn.textContent = isFs ? 'Выключить' : 'Включить';
+      fsGameBtn.textContent = isFs ? '⛶' : '⛶';
+      fsGameBtn.style.opacity = isFs ? '0.5' : '1';
+    };
+
     if (document.fullscreenEnabled || document.webkitFullscreenEnabled) {
       fsSetting.style.display = '';
-      fsBtn.addEventListener('click', () => {
-        if (!document.fullscreenElement && !document.webkitFullscreenElement) {
-          const el = document.documentElement;
-          (el.requestFullscreen || el.webkitRequestFullscreen).call(el);
-          fsBtn.textContent = 'Выключить';
-        } else {
-          (document.exitFullscreen || document.webkitExitFullscreen).call(document);
-          fsBtn.textContent = 'Включить';
-        }
-      });
-      document.addEventListener('fullscreenchange', () => {
-        fsBtn.textContent = document.fullscreenElement ? 'Выключить' : 'Включить';
-      });
-      document.addEventListener('webkitfullscreenchange', () => {
-        fsBtn.textContent = document.webkitFullscreenElement ? 'Выключить' : 'Включить';
-      });
+      fsGameBtn.style.display = '';
+      fsBtn.addEventListener('click', toggleFullscreen);
+      fsGameBtn.addEventListener('click', toggleFullscreen);
+      document.addEventListener('fullscreenchange', updateFsButtons);
+      document.addEventListener('webkitfullscreenchange', updateFsButtons);
     }
 
     document.getElementById('btn-pause').addEventListener('click', () => this.pause());
