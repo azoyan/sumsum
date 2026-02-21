@@ -339,11 +339,30 @@ class GameUI {
     ctx.textAlign = 'center';
     ctx.textBaseline = 'middle';
 
-    const textWidth = ctx.measureText(message).width;
     const padX = 16;
     const padY = 10;
-    const boxW = textWidth + padX * 2;
-    const boxH = fontSize + padY * 2;
+    const maxTextWidth = Math.max(180, Math.min(w - 40, 360));
+
+    // Переносим текст на строки под ширину экрана
+    const words = message.split(' ');
+    const lines = [];
+    let currentLine = '';
+
+    for (const word of words) {
+      const candidate = currentLine ? `${currentLine} ${word}` : word;
+      if (ctx.measureText(candidate).width <= maxTextWidth) {
+        currentLine = candidate;
+      } else {
+        if (currentLine) lines.push(currentLine);
+        currentLine = word;
+      }
+    }
+    if (currentLine) lines.push(currentLine);
+
+    const lineHeight = Math.floor(fontSize * 1.25);
+    const textWidth = lines.reduce((max, line) => Math.max(max, ctx.measureText(line).width), 0);
+    const boxW = Math.min(w - 20, textWidth + padX * 2);
+    const boxH = lines.length * lineHeight + padY * 2;
     const boxX = (w - boxW) / 2;
     const boxY = (h - boxH) / 2;
 
@@ -352,7 +371,10 @@ class GameUI {
     ctx.fill();
 
     ctx.fillStyle = '#e8e8f0';
-    ctx.fillText(message, w / 2, h / 2 + 1);
+    const firstLineY = boxY + padY + lineHeight / 2;
+    lines.forEach((line, i) => {
+      ctx.fillText(line, w / 2, firstLineY + i * lineHeight + 1);
+    });
 
     ctx.restore();
   }

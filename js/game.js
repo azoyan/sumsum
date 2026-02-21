@@ -567,7 +567,7 @@ class SumSumGame {
       this.ui.updateColumnDangers();
     }
 
-    this._updateInteractiveTutorialProgress();
+    this._updateInteractiveTutorialFlow(timestamp);
   }
 
   /**
@@ -1011,23 +1011,26 @@ class SumSumGame {
       awaitingClear: false,
       completed: false,
       nextHintIndex: 0,
+      pendingDrop: null,
       stages: [
         {
-          target: 7,
+          target: 9,
           cubes: [
-            { col: 0, value: 3 },
-            { col: 1, value: 4 },
+            { col: 0, value: 2 },
+            { col: 1, value: 3 },
+            { col: 2, value: 4 },
           ],
           message: 'Составь сумму из чисел',
         },
         {
-          target: 12,
+          target: 15,
           cubes: [
-            { col: 0, value: 2 },
-            { col: 2, value: 4 },
-            { col: 3, value: 6 },
+            { col: 0, value: 7 },
+            { col: 2, value: 3 },
           ],
-          message: 'Составь сумму из чисел',
+          dropCube: { col: 1, value: 5 },
+          dropDelay: 900,
+          message: 'Составь сумму из чисел. Жди нужный блок сверху',
         },
       ],
       sequence: [],
@@ -1055,6 +1058,7 @@ class SumSumGame {
     this.tutorialSession.awaitingClear = false;
     this.tutorialSession.nextHintIndex = 0;
     this.tutorialSession.sequence = [];
+    this.tutorialSession.pendingDrop = null;
     this.tutorialSession.message = stage.message;
 
     for (const item of stage.cubes) {
@@ -1066,8 +1070,41 @@ class SumSumGame {
       this.tutorialSession.sequence.push(cube);
     }
 
+    if (stage.dropCube) {
+      this.tutorialSession.pendingDrop = {
+        ...stage.dropCube,
+        dropAt: performance.now() + (stage.dropDelay || 800),
+        spawned: false,
+      };
+    }
+
     this._updateTutorialHints();
     this.ui.updateAll();
+  }
+
+  /**
+   * Спаун обучающего кубика сверху с анимацией падения
+   * @param {{col:number, value:number}} item
+   * @private
+   */
+  _spawnTutorialDropCube(item) {
+    const cube = createCube(item.value, item.col);
+    const row = this.columns[item.col].length;
+    cube.row = row;
+    cube.spawnTime = performance.now();
+    cube.falling = true;
+    cube.fallFrom = GAME_CONST.MAX_COLUMN_HEIGHT + 2;
+    cube.fallTo = row;
+    cube.fallProgress = 0;
+    cube.bounceProgress = 1;
+    cube.tutorialHint = false;
+
+    this.columns[item.col].push(cube);
+    this.sound.drop();
+
+    this.tutorialSession.sequence.push(cube);
+    this._updateTutorialHints();
+    this.ui.updateColumnDangers();
   }
 
   /**
@@ -1091,9 +1128,16 @@ class SumSumGame {
    * Проверка завершения этапа интерактивного туториала
    * @private
    */
-  _updateInteractiveTutorialProgress() {
-    if (!this.tutorialMode || !this.tutorialSession || !this.tutorialSession.awaitingClear) return;
-    if (this.tutorialSession.completed) return;
+  _updateInteractiveTutorialFlow(timestamp) {
+    if (!this.tutorialMode || !this.tutorialSession || this.tutorialSession.completed) return;
+
+    const pendingDrop = this.tutorialSession.pendingDrop;
+    if (pendingDrop && !pendingDrop.spawned && timestamp >= pendingDrop.dropAt) {
+      pendingDrop.spawned = true;
+      this._spawnTutorialDropCube(pendingDrop);
+    }
+
+    if (!this.tutorialSession.awaitingClear) return;
 
     for (const col of this.columns) {
       for (const cube of col) {
