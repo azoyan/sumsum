@@ -272,7 +272,7 @@ class SoundFX {
  * Вибрация (если поддерживается)
  */
 const Vibration = {
-  enabled: true,
+  enabled: false,
   short() {
     if (this.enabled && navigator.vibrate) navigator.vibrate(15);
   },
