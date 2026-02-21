@@ -393,6 +393,12 @@ html, body {
   z-index: 2;
 }
 
+.header-btn-help.active {
+  background: var(--accent-blue);
+  color: var(--bg-primary);
+  box-shadow: 0 0 0 2px rgba(96, 165, 250, 0.25);
+}
+
 .header-btn-sound .icon-sound-off {
   display: none;
 }

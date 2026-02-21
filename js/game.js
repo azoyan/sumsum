@@ -66,11 +66,9 @@ class SumSumGame {
     // Загрузить настройки
     const settings = this.storage.getSettings();
     this.sound.enabled = settings.sound;
-    Vibration.enabled = settings.vibration;
 
     // Настройки UI
     document.getElementById('setting-sound').checked = settings.sound;
-    document.getElementById('setting-vibration').checked = settings.vibration;
     document.getElementById('setting-difficulty').value = settings.difficulty;
 
     // Обновить статистику на экране меню
@@ -102,9 +100,6 @@ class SumSumGame {
       this.sound.enabled = e.target.checked;
       this.storage.updateSettings({ sound: this.sound.enabled });
       this._updateSoundButton();
-    });
-    document.getElementById('setting-vibration').addEventListener('change', (e) => {
-      Vibration.enabled = e.target.checked;
     });
 
     // Игровые кнопки
@@ -209,6 +204,11 @@ class SumSumGame {
       this._tutorialPausedByHelp = true;
     }
 
+    const helpGameBtn = document.getElementById('btn-help-game');
+    if (helpGameBtn) {
+      helpGameBtn.classList.toggle('active', returnToGame);
+    }
+
     this._showScreen('tutorial-screen');
   }
 
@@ -217,6 +217,11 @@ class SumSumGame {
    * @private
    */
   _closeTutorial() {
+    const helpGameBtn = document.getElementById('btn-help-game');
+    if (helpGameBtn) {
+      helpGameBtn.classList.remove('active');
+    }
+
     if (!this.storage.data.tutorialShown) {
       this.storage.data.tutorialShown = true;
       this.storage.save();
@@ -291,7 +296,6 @@ class SumSumGame {
   _saveSettings() {
     this.storage.updateSettings({
       sound: document.getElementById('setting-sound').checked,
-      vibration: document.getElementById('setting-vibration').checked,
       difficulty: document.getElementById('setting-difficulty').value,
     });
   }
