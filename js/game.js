@@ -31,6 +31,10 @@ class SumSumGame {
     this.lastMatchTime = 0;
     /** @type {number} Количество собранных целей на уровне */
     this.targetsCleared = 0;
+    /** @type {boolean} Интерактивный туториал на игровом поле */
+    this.tutorialMode = false;
+    /** @type {?Object} Сессия интерактивного туториала */
+    this.tutorialSession = null;
     /** @type {boolean} Нужно ли начать игру после закрытия обучения */
     this._tutorialStartGame = false;
     /** @type {boolean} Нужно ли вернуться в текущую игру после обучения */
@@ -78,11 +82,7 @@ class SumSumGame {
 
     // Меню
     document.getElementById('btn-play').addEventListener('click', () => {
-      if (this.storage.data.tutorialShown) {
-        this._startGame();
-      } else {
-        this._openTutorial({ startGameAfter: true });
-      }
+      this._startGame({ tutorial: !this.storage.data.tutorialShown });
     });
     document.getElementById('btn-how-to-play').addEventListener('click', () => this._openTutorial());
     document.getElementById('btn-settings').addEventListener('click', () => this._showScreen('settings-screen'));
@@ -308,7 +308,7 @@ class SumSumGame {
    * Начать новую игру (кнопка «Играть»)
    * @private
    */
-  _startGame() {
+  _startGame({ tutorial = false } = {}) {
     this._showScreen('game-screen');
 
     // Создаём UI после показа экрана (канвас должен быть видим)
@@ -320,33 +320,38 @@ class SumSumGame {
     }
 
     this.reset();
-    this.start();
+    this.start({ tutorial });
   }
 
   /**
    * Начало/возобновление игры
    */
-  start() {
+  start({ tutorial = false } = {}) {
     this.isPlaying = true;
     this.isPaused = false;
+    this.tutorialMode = tutorial;
 
-    // Генерируем начальные цели
-    for (let i = 0; i < GAME_CONST.TARGETS_AHEAD + 1; i++) {
-      this.targets.push(this.generator.generateTarget());
-    }
-
-    // Заполняем очереди
-    for (let col = 0; col < GAME_CONST.NUM_COLUMNS; col++) {
-      while (this.queues[col].length < GAME_CONST.QUEUE_SIZE) {
-        this.queues[col].push(this.generator.generateNextCubeValue(col));
+    if (this.tutorialMode) {
+      this._startInteractiveTutorial();
+    } else {
+      // Генерируем начальные цели
+      for (let i = 0; i < GAME_CONST.TARGETS_AHEAD + 1; i++) {
+        this.targets.push(this.generator.generateTarget());
       }
-    }
 
-    // Спауним начальные кубики (по 2-3 на колонку)
-    const initialCubes = randomInt(6, 10);
-    for (let i = 0; i < initialCubes; i++) {
-      const col = i % GAME_CONST.NUM_COLUMNS;
-      this._spawnCubeImmediate(col);
+      // Заполняем очереди
+      for (let col = 0; col < GAME_CONST.NUM_COLUMNS; col++) {
+        while (this.queues[col].length < GAME_CONST.QUEUE_SIZE) {
+          this.queues[col].push(this.generator.generateNextCubeValue(col));
+        }
+      }
+
+      // Спауним начальные кубики (по 2-3 на колонку)
+      const initialCubes = randomInt(6, 10);
+      for (let i = 0; i < initialCubes; i++) {
+        const col = i % GAME_CONST.NUM_COLUMNS;
+        this._spawnCubeImmediate(col);
+      }
     }
 
     // UI
@@ -393,6 +398,8 @@ class SumSumGame {
       this.comboCount = 0;
       this.lastMatchTime = 0;
       this.targetsCleared = 0;
+      this.tutorialMode = false;
+      this.tutorialSession = null;
       this._shaking = false;
       this._pendingSpawnCol = -1;
       this.isPlaying = false;
@@ -559,6 +566,8 @@ class SumSumGame {
     if (hasChanges) {
       this.ui.updateColumnDangers();
     }
+
+    this._updateInteractiveTutorialProgress();
   }
 
   /**
@@ -566,6 +575,8 @@ class SumSumGame {
    * @private
    */
   _updateSpawn(timestamp) {
+    if (this.tutorialMode) return;
+
     const config = getLevelConfig(this.level);
     const interval = config.spawnInterval;
     const shakeTime = Math.max(800, Math.floor(interval * 0.7)); // дрожание начинается рано
@@ -614,6 +625,8 @@ class SumSumGame {
    * @private
    */
   _updateCombo(timestamp) {
+    if (this.tutorialMode) return;
+
     if (this.comboCount > 0 && timestamp - this.lastMatchTime > GAME_CONST.COMBO_TIMEOUT) {
       this.comboCount = 0;
       this.ui.updateCombo(0);
@@ -740,6 +753,12 @@ class SumSumGame {
     const cube = this.columns[colIdx][rowIdx];
     if (!cube || cube.removing) return;
 
+    if (this.tutorialMode && this.tutorialSession) {
+      if (cube.selected) return;
+      const expected = this.tutorialSession.sequence[this.tutorialSession.nextHintIndex] || null;
+      if (expected && cube !== expected) return;
+    }
+
     cube.selected = !cube.selected;
 
     if (cube.selected) {
@@ -750,6 +769,11 @@ class SumSumGame {
     }
 
     this.ui.updateSelectedSum();
+
+    if (this.tutorialMode && this.tutorialSession && cube.selected) {
+      this.tutorialSession.nextHintIndex++;
+      this._updateTutorialHints();
+    }
 
     // Автоматическая проверка суммы
     this._checkTarget();
@@ -810,6 +834,24 @@ class SumSumGame {
    * @private
    */
   _onTargetMatch(cubes) {
+    if (this.tutorialMode && this.tutorialSession) {
+      // В интерактивном туториале очки/комбо не начисляются,
+      // используем только механику удаления кубиков.
+      this.sound.match();
+
+      for (const cube of cubes) {
+        cube.selected = false;
+        cube.removing = true;
+        cube.removeProgress = 0;
+      }
+
+      this.tutorialSession.awaitingClear = true;
+      this.ui.updateSelectedSum();
+      this.ui.updateScore();
+      this.ui.updateCombo(0);
+      return;
+    }
+
     const target = this.targets[0];
     const now = performance.now();
 
@@ -949,6 +991,143 @@ class SumSumGame {
       }
     }
     return cleared;
+  }
+
+  /**
+   * Старт интерактивного обучения на игровом поле
+   * @private
+   */
+  _startInteractiveTutorial() {
+    this.score = 0;
+    this.comboCount = 0;
+    this.targetsCleared = 0;
+    this.level = 1;
+    this.lastMatchTime = 0;
+    this.targets = [0, 0, 0];
+    this.queues = [[], [], [], []];
+
+    this.tutorialSession = {
+      stageIndex: 0,
+      awaitingClear: false,
+      completed: false,
+      nextHintIndex: 0,
+      stages: [
+        {
+          target: 7,
+          cubes: [
+            { col: 0, value: 3 },
+            { col: 1, value: 4 },
+          ],
+          message: 'Составь сумму из чисел',
+        },
+        {
+          target: 12,
+          cubes: [
+            { col: 0, value: 2 },
+            { col: 2, value: 4 },
+            { col: 3, value: 6 },
+          ],
+          message: 'Составь сумму из чисел',
+        },
+      ],
+      sequence: [],
+      message: 'Составь сумму из чисел',
+    };
+
+    this._loadTutorialStage(0);
+  }
+
+  /**
+   * Загрузить этап интерактивного туториала
+   * @param {number} stageIndex
+   * @private
+   */
+  _loadTutorialStage(stageIndex) {
+    if (!this.tutorialSession) return;
+
+    const stage = this.tutorialSession.stages[stageIndex];
+    if (!stage) return;
+
+    this.columns = [[], [], [], []];
+    this.targets = [stage.target, 0, 0];
+
+    this.tutorialSession.stageIndex = stageIndex;
+    this.tutorialSession.awaitingClear = false;
+    this.tutorialSession.nextHintIndex = 0;
+    this.tutorialSession.sequence = [];
+    this.tutorialSession.message = stage.message;
+
+    for (const item of stage.cubes) {
+      const cube = createCube(item.value, item.col);
+      cube.row = this.columns[item.col].length;
+      cube.bounceProgress = 1;
+      cube.tutorialHint = false;
+      this.columns[item.col].push(cube);
+      this.tutorialSession.sequence.push(cube);
+    }
+
+    this._updateTutorialHints();
+    this.ui.updateAll();
+  }
+
+  /**
+   * Обновить подсветку нужного кубика в текущем этапе
+   * @private
+   */
+  _updateTutorialHints() {
+    if (!this.tutorialSession) return;
+
+    for (const cube of this.tutorialSession.sequence) {
+      cube.tutorialHint = false;
+    }
+
+    const nextCube = this.tutorialSession.sequence[this.tutorialSession.nextHintIndex];
+    if (nextCube) {
+      nextCube.tutorialHint = true;
+    }
+  }
+
+  /**
+   * Проверка завершения этапа интерактивного туториала
+   * @private
+   */
+  _updateInteractiveTutorialProgress() {
+    if (!this.tutorialMode || !this.tutorialSession || !this.tutorialSession.awaitingClear) return;
+    if (this.tutorialSession.completed) return;
+
+    for (const col of this.columns) {
+      for (const cube of col) {
+        if (cube.removing) return;
+      }
+    }
+
+    const nextStage = this.tutorialSession.stageIndex + 1;
+    if (nextStage < this.tutorialSession.stages.length) {
+      this._loadTutorialStage(nextStage);
+      return;
+    }
+
+    this._finishInteractiveTutorial();
+  }
+
+  /**
+   * Завершить интерактивный туториал и запустить обычную игру
+   * @private
+   */
+  _finishInteractiveTutorial() {
+    if (!this.tutorialSession || this.tutorialSession.completed) return;
+
+    this.tutorialSession.completed = true;
+    if (this.tutorialSession) {
+      this.tutorialSession.message = 'Отлично! Начинаем игру';
+    }
+    this.storage.data.tutorialShown = true;
+    this.storage.save();
+
+    setTimeout(() => {
+      this.reset();
+      this.start();
+    }, 650);
   }
 
   /**

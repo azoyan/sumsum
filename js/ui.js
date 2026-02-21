@@ -216,7 +216,10 @@ class GameUI {
     this._renderBackground(ctx, w, h);
 
     // Колонки и кубики
-    this._renderColumns(ctx);
+    this._renderColumns(ctx, timestamp);
+
+    // Подсказка интерактивного туториала
+    this._renderTutorialHint(ctx, w, h, timestamp);
 
     // Обновление таймера комбо в DOM
     this._updateComboTimerDOM(timestamp);
@@ -264,7 +267,7 @@ class GameUI {
    * Рендеринг всех колонок с кубиками
    * @private
    */
-  _renderColumns(ctx) {
+  _renderColumns(ctx, timestamp) {
     const columns = this.game.columns;
 
     for (let colIdx = 0; colIdx < columns.length; colIdx++) {
@@ -295,6 +298,13 @@ class GameUI {
           continue;
         }
 
+        // Подсветка кубика-подсказки в интерактивном туториале
+        if (cube.tutorialHint) {
+          const pulse = Math.sin(timestamp * 0.025);
+          x += pulse * 2.2;
+          y += Math.cos(timestamp * 0.03) * 1.2;
+        }
+
         // Анимация появления (bounce)
         let scale = 1;
         if (cube.bounceProgress < 1) {
@@ -309,6 +319,42 @@ class GameUI {
         this._renderCube(ctx, cube, x, y, scale);
       }
     }
+  }
+
+  /**
+   * Текстовая подсказка в центре экрана во время интерактивного туториала
+   * @private
+   */
+  _renderTutorialHint(ctx, w, h, timestamp) {
+    if (!this.game.tutorialMode || !this.game.tutorialSession) return;
+
+    const message = this.game.tutorialSession.message || 'Составь сумму из чисел';
+    const pulse = 0.75 + Math.abs(Math.sin(timestamp * 0.004)) * 0.25;
+
+    ctx.save();
+    ctx.globalAlpha = pulse;
+
+    const fontSize = Math.max(18, Math.floor(this.cubeSize * 0.42));
+    ctx.font = `700 ${fontSize}px ${getComputedStyle(document.body).fontFamily}`;
+    ctx.textAlign = 'center';
+    ctx.textBaseline = 'middle';
+
+    const textWidth = ctx.measureText(message).width;
+    const padX = 16;
+    const padY = 10;
+    const boxW = textWidth + padX * 2;
+    const boxH = fontSize + padY * 2;
+    const boxX = (w - boxW) / 2;
+    const boxY = (h - boxH) / 2;
+
+    ctx.fillStyle = 'rgba(15, 23, 42, 0.72)';
+    this._roundRect(ctx, boxX, boxY, boxW, boxH, 12);
+    ctx.fill();
+
+    ctx.fillStyle = '#e8e8f0';
+    ctx.fillText(message, w / 2, h / 2 + 1);
+
+    ctx.restore();
   }
 
   /**
