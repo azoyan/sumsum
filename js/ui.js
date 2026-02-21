@@ -343,21 +343,31 @@ class GameUI {
     const padY = 10;
     const maxTextWidth = Math.max(180, Math.min(w - 40, 360));
 
-    // Переносим текст на строки под ширину экрана
-    const words = message.split(' ');
+    // Переносим текст на строки под ширину экрана,
+    // учитывая ручные переносы строк в сообщении (\n)
     const lines = [];
-    let currentLine = '';
+    const rawLines = message.split('\n');
 
-    for (const word of words) {
-      const candidate = currentLine ? `${currentLine} ${word}` : word;
-      if (ctx.measureText(candidate).width <= maxTextWidth) {
-        currentLine = candidate;
-      } else {
-        if (currentLine) lines.push(currentLine);
-        currentLine = word;
+    for (const rawLine of rawLines) {
+      const words = rawLine.split(' ').filter(Boolean);
+      let currentLine = '';
+
+      if (words.length === 0) {
+        lines.push('');
+        continue;
       }
+
+      for (const word of words) {
+        const candidate = currentLine ? `${currentLine} ${word}` : word;
+        if (ctx.measureText(candidate).width <= maxTextWidth) {
+          currentLine = candidate;
+        } else {
+          if (currentLine) lines.push(currentLine);
+          currentLine = word;
+        }
+      }
+      if (currentLine) lines.push(currentLine);
     }
-    if (currentLine) lines.push(currentLine);
 
     const lineHeight = Math.floor(fontSize * 1.25);
     const textWidth = lines.reduce((max, line) => Math.max(max, ctx.measureText(line).width), 0);

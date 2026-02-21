@@ -1003,8 +1003,9 @@ class SumSumGame {
     this.targetsCleared = 0;
     this.level = 1;
     this.lastMatchTime = 0;
-    this.targets = [0, 0, 0];
+    this.targets = [6, 18, 21];
     this.queues = [[], [], [], []];
+    this.columns = [[], [], [], []];
 
     this.tutorialSession = {
       stageIndex: 0,
@@ -1012,74 +1013,69 @@ class SumSumGame {
       completed: false,
       nextHintIndex: 0,
       pendingDrop: null,
-      stages: [
-        {
-          target: 9,
-          cubes: [
-            { col: 0, value: 2 },
-            { col: 1, value: 3 },
-            { col: 2, value: 4 },
-          ],
-          message: 'Составь сумму из чисел',
-        },
-        {
-          target: 15,
-          cubes: [
-            { col: 0, value: 7 },
-            { col: 2, value: 3 },
-          ],
-          dropCube: { col: 1, value: 5 },
-          dropDelay: 900,
-          message: 'Составь сумму из чисел. Жди нужный блок сверху',
-        },
-      ],
       sequence: [],
-      message: 'Составь сумму из чисел',
+      message: 'Составь сумму 6',
     };
 
-    this._loadTutorialStage(0);
-  }
+    // Заполняем верхние очереди реальными цифрами
+    for (let col = 0; col < GAME_CONST.NUM_COLUMNS; col++) {
+      while (this.queues[col].length < GAME_CONST.QUEUE_SIZE) {
+        this.queues[col].push(this.generator.generateNextCubeValue(col));
+      }
+    }
 
-  /**
-   * Загрузить этап интерактивного туториала
-   * @param {number} stageIndex
-   * @private
-   */
-  _loadTutorialStage(stageIndex) {
-    if (!this.tutorialSession) return;
+    // Нужная "2" видна заранее в очереди ещё на первом этапе
+    this.queues[1][0] = 2;
 
-    const stage = this.tutorialSession.stages[stageIndex];
-    if (!stage) return;
+    // Стартовые кубики в стакане: 1,2,3,7,9
+    this._addTutorialCube(0, 1);
+    this._addTutorialCube(1, 2);
+    this._addTutorialCube(2, 3);
+    this._addTutorialCube(3, 7);
+    this._addTutorialCube(3, 9);
 
-    this.columns = [[], [], [], []];
-    this.targets = [stage.target, 0, 0];
+    // Этап 1: подсвечиваем только 1,2,3 для цели 6
+    this.tutorialSession.sequence = [
+      this._findTutorialCubeByValue(1),
+      this._findTutorialCubeByValue(2),
+      this._findTutorialCubeByValue(3),
+    ].filter(Boolean);
 
-    this.tutorialSession.stageIndex = stageIndex;
-    this.tutorialSession.awaitingClear = false;
     this.tutorialSession.nextHintIndex = 0;
-    this.tutorialSession.sequence = [];
-    this.tutorialSession.pendingDrop = null;
-    this.tutorialSession.message = stage.message;
-
-    for (const item of stage.cubes) {
-      const cube = createCube(item.value, item.col);
-      cube.row = this.columns[item.col].length;
-      cube.bounceProgress = 1;
-      cube.tutorialHint = false;
-      this.columns[item.col].push(cube);
-      this.tutorialSession.sequence.push(cube);
-    }
-
-    if (stage.dropCube) {
-      this.tutorialSession.pendingDrop = {
-        ...stage.dropCube,
-        dropAt: performance.now() + (stage.dropDelay || 800),
-        spawned: false,
-      };
-    }
+    this.tutorialSession.message = 'Составь сумму 6 из чисел';
 
     this._updateTutorialHints();
     this.ui.updateAll();
+  }
+
+  /**
+   * Добавить кубик для сценария туториала
+   * @param {number} col
+   * @param {number} value
+   * @private
+   */
+  _addTutorialCube(col, value) {
+    const cube = createCube(value, col);
+    cube.row = this.columns[col].length;
+    cube.bounceProgress = 1;
+    cube.tutorialHint = false;
+    this.columns[col].push(cube);
+    return cube;
+  }
+
+  /**
+   * Найти первый доступный кубик по значению
+   * @param {number} value
+   * @returns {?Object}
+   * @private
+   */
+  _findTutorialCubeByValue(value) {
+    for (const col of this.columns) {
+      for (const cube of col) {
+        if (!cube.removing && cube.value === value) return cube;
+      }
+    }
+    return null;
   }
 
   /**
@@ -1099,12 +1095,53 @@ class SumSumGame {
     cube.bounceProgress = 1;
     cube.tutorialHint = false;
 
+    if (this.queues[item.col] && this.queues[item.col].length > 0) {
+      this.queues[item.col].shift();
+    }
+    while (this.queues[item.col].length < GAME_CONST.QUEUE_SIZE) {
+      this.queues[item.col].push(this.generator.generateNextCubeValue(item.col));
+    }
+
+    // После падения нужного блока в туториале меняем верх очереди
+    // на явно другой по цифре и цвету блок.
+    const replacement = this._pickTutorialReplacementValue(item.value);
+    if (replacement !== null) {
+      this.queues[item.col][0] = replacement;
+    }
+
     this.columns[item.col].push(cube);
     this.sound.drop();
 
     this.tutorialSession.sequence.push(cube);
     this._updateTutorialHints();
+    this.ui.updateQueues();
     this.ui.updateColumnDangers();
+  }
+
+  /**
+   * Подобрать новое значение для очереди, отличающееся по цифре и цвету
+   * от исключаемого значения.
+   * @param {number} excludedValue
+   * @returns {?number}
+   * @private
+   */
+  _pickTutorialReplacementValue(excludedValue) {
+    const excludedColor = getCubeColors(excludedValue).bg;
+
+    for (let i = 0; i < 24; i++) {
+      const candidate = this.generator.generateNextCubeValue(0);
+      if (candidate === excludedValue) continue;
+      if (getCubeColors(candidate).bg === excludedColor) continue;
+      return candidate;
+    }
+
+    // Фолбэк на случай экзотической конфигурации генератора
+    for (let candidate = 1; candidate <= 12; candidate++) {
+      if (candidate !== excludedValue && getCubeColors(candidate).bg !== excludedColor) {
+        return candidate;
+      }
+    }
+    return null;
   }
 
   /**
@@ -1145,12 +1182,34 @@ class SumSumGame {
       }
     }
 
-    const nextStage = this.tutorialSession.stageIndex + 1;
-    if (nextStage < this.tutorialSession.stages.length) {
-      this._loadTutorialStage(nextStage);
+    // Этап 1 завершён -> этап 2
+    if (this.tutorialSession.stageIndex === 0) {
+      this.tutorialSession.stageIndex = 1;
+      this.tutorialSession.awaitingClear = false;
+      this.tutorialSession.nextHintIndex = 0;
+      this.tutorialSession.message = 'Составь сумму 18\nЖди нужный блок сверху';
+
+      this.targets[0] = 18;
+      this.targets[1] = 21;
+      this.targets[2] = this.generator.generateTarget();
+
+      const cube7 = this._findTutorialCubeByValue(7);
+      const cube9 = this._findTutorialCubeByValue(9);
+      this.tutorialSession.sequence = [cube7, cube9].filter(Boolean);
+
+      this.tutorialSession.pendingDrop = {
+        col: 1,
+        value: 2,
+        dropAt: performance.now() + 900,
+        spawned: false,
+      };
+
+      this._updateTutorialHints();
+      this.ui.updateTargets();
       return;
     }
 
+    // Этап 2 завершён
     this._finishInteractiveTutorial();
   }
 
