@@ -148,11 +148,6 @@ html, body {
   stroke-linejoin: round;
 }
 
-#btn-pause svg {
-  fill: currentColor;
-  stroke: none;
-}
-
 /* --- Главное меню --- */
 .menu-container {
   text-align: center;
@@ -241,8 +236,24 @@ html, body {
 }
 
 .tutorial-icon {
-  font-size: 28px;
+  width: 28px;
+  height: 28px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--accent-blue);
   flex-shrink: 0;
+}
+
+.tutorial-icon svg {
+  width: 28px;
+  height: 28px;
+  display: block;
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 2;
+  stroke-linecap: round;
+  stroke-linejoin: round;
 }
 
 .tutorial-step p {
@@ -719,11 +730,25 @@ html, body {
 }
 
 #go-new-record {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
   font-size: 20px;
   font-weight: 700;
   color: var(--accent-yellow);
   margin-bottom: 16px;
   animation: pulse 0.8s ease infinite alternate;
+}
+
+#go-new-record svg {
+  width: 20px;
+  height: 20px;
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 2;
+  stroke-linecap: round;
+  stroke-linejoin: round;
 }
 
 #go-new-record.hidden {
