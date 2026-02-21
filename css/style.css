@@ -126,12 +126,31 @@ html, body {
   background: var(--bg-card);
   color: var(--text-primary);
   font-size: 20px;
+  line-height: 1;
+  font-family: var(--font-main);
+  font-weight: 700;
   cursor: pointer;
   transition: transform var(--transition-fast);
 }
 
 .btn-icon:active {
   transform: scale(0.9);
+}
+
+.btn-icon svg {
+  width: 22px;
+  height: 22px;
+  display: block;
+  stroke: currentColor;
+  stroke-width: 2;
+  fill: none;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
+#btn-pause svg {
+  fill: currentColor;
+  stroke: none;
 }
 
 /* --- Главное меню --- */
@@ -339,8 +358,32 @@ html, body {
 }
 
 .header-btn-left {
-  flex-shrink: 0;
+  position: absolute;
+  left: 16px;
+  top: 50%;
+  transform: translateY(-50%);
+  z-index: 2;
   font-size: 22px;
+}
+
+.header-btn-sound {
+  position: absolute;
+  left: 68px;
+  top: 50%;
+  transform: translateY(-50%);
+  z-index: 2;
+}
+
+.header-btn-sound .icon-sound-off {
+  display: none;
+}
+
+.header-btn-sound.muted .icon-sound-on {
+  display: none;
+}
+
+.header-btn-sound.muted .icon-sound-off {
+  display: block;
 }
 
 .header-btn-center {

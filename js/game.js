@@ -70,6 +70,15 @@ class SumSumGame {
     // Обновить статистику на экране меню
     this._updateMenuStats();
 
+    // Первый запуск: показать обучение один раз
+    if (!this.storage.data.tutorialShown) {
+      this.storage.data.tutorialShown = true;
+      this.storage.save();
+      if (this.storage.data.totalGames === 0) {
+        this._showScreen('tutorial-screen');
+      }
+    }
+
     // === Кнопки ===
 
     // Меню
@@ -88,6 +97,8 @@ class SumSumGame {
 
     document.getElementById('setting-sound').addEventListener('change', (e) => {
       this.sound.enabled = e.target.checked;
+      this.storage.updateSettings({ sound: this.sound.enabled });
+      this._updateSoundButton();
     });
     document.getElementById('setting-vibration').addEventListener('change', (e) => {
       Vibration.enabled = e.target.checked;
@@ -98,6 +109,7 @@ class SumSumGame {
     const fsBtn = document.getElementById('btn-fullscreen');
     const fsSetting = document.getElementById('fullscreen-setting');
     const fsGameBtn = document.getElementById('btn-fullscreen-game');
+    const soundGameBtn = document.getElementById('btn-sound-game');
 
     const toggleFullscreen = () => {
       if (!document.fullscreenElement && !document.webkitFullscreenElement) {
@@ -111,7 +123,8 @@ class SumSumGame {
     const updateFsButtons = () => {
       const isFs = !!(document.fullscreenElement || document.webkitFullscreenElement);
       fsBtn.textContent = isFs ? 'Выключить' : 'Включить';
-      fsGameBtn.textContent = isFs ? '⛶' : '⛶';
+      fsGameBtn.title = isFs ? 'Выйти из полного экрана' : 'Полный экран';
+      fsGameBtn.setAttribute('aria-label', isFs ? 'Выйти из полного экрана' : 'Полный экран');
       fsGameBtn.style.opacity = isFs ? '0.5' : '1';
     };
 
@@ -122,7 +135,17 @@ class SumSumGame {
       fsGameBtn.addEventListener('click', toggleFullscreen);
       document.addEventListener('fullscreenchange', updateFsButtons);
       document.addEventListener('webkitfullscreenchange', updateFsButtons);
+    } else {
+      soundGameBtn.style.left = '16px';
     }
+
+    this._updateSoundButton();
+    soundGameBtn.addEventListener('click', () => {
+      this.sound.enabled = !this.sound.enabled;
+      document.getElementById('setting-sound').checked = this.sound.enabled;
+      this.storage.updateSettings({ sound: this.sound.enabled });
+      this._updateSoundButton();
+    });
 
     document.getElementById('btn-pause').addEventListener('click', () => this.pause());
     document.getElementById('btn-resume').addEventListener('click', () => this.resume());
@@ -181,6 +204,21 @@ class SumSumGame {
   _updateMenuStats() {
     document.getElementById('menu-high-score').textContent = formatNumber(this.storage.data.highScore);
     document.getElementById('menu-total-games').textContent = this.storage.data.totalGames;
+  }
+
+  /**
+   * Обновить кнопку звука в игровом хедере
+   * @private
+   */
+  _updateSoundButton() {
+    const soundGameBtn = document.getElementById('btn-sound-game');
+    if (!soundGameBtn) return;
+
+    soundGameBtn.classList.toggle('muted', !this.sound.enabled);
+    const label = this.sound.enabled ? 'Выключить звук' : 'Включить звук';
+    soundGameBtn.title = label;
+    soundGameBtn.setAttribute('aria-label', label);
+    soundGameBtn.style.opacity = this.sound.enabled ? '1' : '0.55';
   }
 
   /**

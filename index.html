@@ -109,8 +109,31 @@
   <div id="game-screen" class="screen">
     <!-- Верхняя панель -->
     <div id="game-header">
-      <button id="btn-fullscreen-game" class="btn-icon header-btn-left" title="Полный экран" style="display:none">⛶</button>
-      <button id="btn-pause" class="btn-icon header-btn-center" title="Пауза">⏸</button>
+      <button id="btn-fullscreen-game" class="btn-icon header-btn-left" title="Полный экран" aria-label="Полный экран" style="display:none">
+        <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false">
+          <path d="M4 9V4h5" />
+          <path d="M20 9V4h-5" />
+          <path d="M4 15v5h5" />
+          <path d="M20 15v5h-5" />
+        </svg>
+      </button>
+      <button id="btn-sound-game" class="btn-icon header-btn-sound" title="Выключить звук" aria-label="Выключить звук">
+        <svg class="icon-sound-on" viewBox="0 0 24 24" aria-hidden="true" focusable="false">
+          <path d="M11 5L6 9H3v6h3l5 4V5z" />
+          <path d="M15 9.5a4 4 0 010 5" />
+          <path d="M17.5 7a7 7 0 010 10" />
+        </svg>
+        <svg class="icon-sound-off" viewBox="0 0 24 24" aria-hidden="true" focusable="false">
+          <path d="M11 5L6 9H3v6h3l5 4V5z" />
+          <path d="M4 4l16 16" />
+        </svg>
+      </button>
+      <button id="btn-pause" class="btn-icon header-btn-center" title="Пауза" aria-label="Пауза">
+        <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false">
+          <rect x="7" y="5" width="4" height="14" rx="1" />
+          <rect x="13" y="5" width="4" height="14" rx="1" />
+        </svg>
+      </button>
       <div id="target-carousel">
           <span id="next-target-2" class="carousel-item carousel-next2">25</span>
           <span id="next-target-1" class="carousel-item carousel-next1">20</span>

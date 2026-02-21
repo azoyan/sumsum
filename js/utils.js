@@ -248,16 +248,16 @@ class SoundFX {
 
   /** Звук проигрыша */
   gameOver() {
-    this._playTone(440, 0.3, 'sawtooth', 0.2);
-    setTimeout(() => this._playTone(370, 0.3, 'sawtooth', 0.2), 200);
-    setTimeout(() => this._playTone(311, 0.5, 'sawtooth', 0.25), 400);
+    this._playTone(440, 0.3, 'sine', 0.2);
+    setTimeout(() => this._playTone(370, 0.3, 'sine', 0.2), 200);
+    setTimeout(() => this._playTone(311, 0.5, 'sine', 0.25), 400);
   }
 
   /** Звук падения кубика */
   drop() { this._playTone(200, 0.08, 'sine', 0.1); }
 
   /** Звук предупреждения */
-  warning() { this._playTone(220, 0.2, 'square', 0.15); }
+  warning() { this._playTone(220, 0.2, 'sine', 0.15); }
 
   /** Звук повышения уровня */
   levelUp() {

@@ -38,6 +38,7 @@ class GameStorage {
         vibration: true,
         difficulty: 'medium'
       },
+      tutorialShown: false,
       lastPlayed: null,
     };
   }
