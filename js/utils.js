@@ -240,10 +240,10 @@ class SoundFX {
 
   /** Звук комбо */
   combo() {
-    this._playTone(587, 0.1, 'square', 0.2);
-    setTimeout(() => this._playTone(740, 0.1, 'square', 0.2), 60);
-    setTimeout(() => this._playTone(880, 0.15, 'square', 0.25), 120);
-    setTimeout(() => this._playTone(1047, 0.2, 'square', 0.2), 200);
+    this._playTone(587, 0.1, 'sine', 0.2);
+    setTimeout(() => this._playTone(740, 0.1, 'sine', 0.2), 60);
+    setTimeout(() => this._playTone(784, 0.15, 'sine', 0.25), 120);
+    setTimeout(() => this._playTone(880, 0.2, 'sine', 0.2), 200);
   }
 
   /** Звук проигрыша */
@@ -336,6 +336,8 @@ const GAME_CONST = {
   FALL_DURATION: 350,    // мс, длительность анимации падения
   REMOVE_DURATION: 300,  // мс, длительность анимации удаления
   BOUNCE_DURATION: 250,  // мс, длительность bounce-анимации
+  CUBE_SIZE_MIN: 40,     // минимальный размер кубика
+  CUBE_SIZE_MAX: 72,     // максимальный размер кубика
 };
 
 /**
@@ -347,4 +349,16 @@ const DEBUG = {
   infiniteTime: false,
   autoPlay: false,
   logGenerations: false,
+};
+
+/**
+ * Конфигурация приложения
+ * Объединяет все настройки в одно место для избежания глобального загрязнения
+ */
+const APP_CONFIG = {
+  GAME: GAME_CONST,
+  DEBUG: DEBUG,
+  LEVEL_CONFIG: LEVEL_CONFIG,
+  CACHE_NAME: 'sumsum-v1',
+  STORAGE_KEY: 'sumsum_save',
 };

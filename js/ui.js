@@ -30,6 +30,10 @@ class GameUI {
     // Анимация всплывающих очков
     this.floatingTexts = [];
 
+    // Сохраняем ссылку на обработчик события для удаления
+    this._inputHandler = null;
+    this._resizeHandler = null;
+
     // FPS
     this.fpsCounter = document.getElementById('fps-counter');
     this.frameCount = 0;
@@ -45,12 +49,13 @@ class GameUI {
       levelValue: document.getElementById('level-value'),
       comboDisplay: document.getElementById('combo-display'),
       comboValue: document.getElementById('combo-value'),
+      comboTimerProgress: document.querySelector('.combo-timer-progress'),
       queueItems: document.querySelectorAll('.queue-item'),
       colDangers: document.querySelectorAll('.col-danger'),
     };
 
-    this._resizeBound = this._onResize.bind(this);
-    window.addEventListener('resize', debounce(this._resizeBound, 150));
+    this._resizeHandler = debounce(this._onResize.bind(this), 150);
+    window.addEventListener('resize', this._resizeHandler);
     this._onResize();
     this._setupInput();
   }
@@ -70,8 +75,8 @@ class GameUI {
     // Подбираем размер кубика под доступное пространство
     const maxCubeW = (w - 32 - (GAME_CONST.NUM_COLUMNS - 1) * 10) / GAME_CONST.NUM_COLUMNS;
     const maxCubeH = (h - 20) / (GAME_CONST.MAX_COLUMN_HEIGHT + 1);
-    this.cubeSize = Math.floor(Math.min(maxCubeW, maxCubeH, 72));
-    this.cubeSize = Math.max(this.cubeSize, 40); // минимум
+    this.cubeSize = Math.floor(Math.min(maxCubeW, maxCubeH, GAME_CONST.CUBE_SIZE_MAX));
+    this.cubeSize = Math.max(this.cubeSize, GAME_CONST.CUBE_SIZE_MIN); // минимум
     this.cubeGap = Math.max(4, Math.floor(this.cubeSize * 0.08));
     this.columnGap = Math.max(8, Math.floor(this.cubeSize * 0.15));
 
@@ -103,7 +108,10 @@ class GameUI {
    * @private
    */
   _setupInput() {
-    const handler = (e) => {
+    // Очищаем старый обработчик, если существует
+    this._cleanupInput();
+
+    this._inputHandler = (e) => {
       e.preventDefault();
       if (!this.game.isPlaying || this.game.isPaused) return;
 
@@ -121,8 +129,36 @@ class GameUI {
       this._handleTap(x, y);
     };
 
-    this.canvas.addEventListener('touchstart', handler, { passive: false });
-    this.canvas.addEventListener('click', handler);
+    this.canvas.addEventListener('touchstart', this._inputHandler, { passive: false });
+    this.canvas.addEventListener('click', this._inputHandler);
+  }
+
+  /**
+   * Очистка обработчиков событий
+   * @private
+   */
+  _cleanupInput() {
+    if (this._inputHandler) {
+      this.canvas.removeEventListener('touchstart', this._inputHandler);
+      this.canvas.removeEventListener('click', this._inputHandler);
+      this._inputHandler = null;
+    }
+  }
+
+  /**
+   * Полная очистка UI при завершении игры
+   */
+  cleanup() {
+    try {
+      this._cleanupInput();
+      if (this._resizeHandler) {
+        window.removeEventListener('resize', this._resizeHandler);
+        this._resizeHandler = null;
+      }
+      this.floatingTexts = [];
+    } catch (e) {
+      console.warn('Error during UI cleanup:', e);
+    }
   }
 
   /**
@@ -181,6 +217,9 @@ class GameUI {
 
     // Колонки и кубики
     this._renderColumns(ctx);
+
+    // Обновление таймера комбо в DOM
+    this._updateComboTimerDOM(timestamp);
 
     // Всплывающие тексты (очки)
     this._renderFloatingTexts(ctx, timestamp);
@@ -394,7 +433,39 @@ class GameUI {
     ctx.closePath();
   }
 
-  // ===== Всплывающие тексты =====
+  // ===== Всплывающие тексты и эффекты =====
+
+  /**
+   * Обновление кругового таймера комбо в DOM
+   * @private
+   */
+  _updateComboTimerDOM(timestamp) {
+    if (this.game.comboCount <= 0 || this.game.lastMatchTime === 0) return;
+
+    const elapsed = timestamp - this.game.lastMatchTime;
+    const remaining = GAME_CONST.COMBO_TIMEOUT - elapsed;
+
+    if (remaining <= 0) {
+      this.dom.comboTimerProgress.style.strokeDashoffset = 100.53;
+      return;
+    }
+
+    const progress = remaining / GAME_CONST.COMBO_TIMEOUT;
+    
+    // Обновляем длину дуги (100.53 - это полная длина окружности 2 * PI * 16)
+    const dashoffset = 100.53 - (progress * 100.53);
+    this.dom.comboTimerProgress.style.strokeDashoffset = dashoffset;
+
+    // Цвет меняется от зеленого к красному
+    let color = 'var(--accent-green)'; // зеленый
+    if (progress < 0.3) {
+      color = 'var(--accent-red)'; // красный
+    } else if (progress < 0.6) {
+      color = 'var(--accent-yellow)'; // желтый
+    }
+    
+    this.dom.comboTimerProgress.style.stroke = color;
+  }
 
   /**
    * Добавить всплывающий текст (очки)
@@ -483,14 +554,16 @@ class GameUI {
    * @param {number} combo
    */
   updateCombo(combo) {
-    if (combo > 1) {
-      this.dom.comboDisplay.classList.remove('hidden');
+    if (combo >= 1) {
+      this.dom.comboDisplay.classList.remove('invisible');
       this.dom.comboValue.textContent = `×${combo}`;
-      this.dom.comboValue.classList.remove('anim-combo-flash');
-      void this.dom.comboValue.offsetWidth;
-      this.dom.comboValue.classList.add('anim-combo-flash');
+      if (combo > 1) {
+        this.dom.comboValue.classList.remove('anim-combo-flash');
+        void this.dom.comboValue.offsetWidth;
+        this.dom.comboValue.classList.add('anim-combo-flash');
+      }
     } else {
-      this.dom.comboDisplay.classList.add('hidden');
+      this.dom.comboDisplay.classList.add('invisible');
     }
   }
 

@@ -145,8 +145,14 @@
         <span class="footer-label">Счёт</span>
         <span id="score-value">0</span>
       </div>
-      <div id="combo-display" class="hidden">
-        <span id="combo-value">×1.5</span>
+      <div id="combo-display" class="invisible">
+        <div class="combo-timer-container">
+          <svg class="combo-timer-svg" viewBox="0 0 36 36">
+            <circle class="combo-timer-bg" cx="18" cy="18" r="16"></circle>
+            <circle class="combo-timer-progress" cx="18" cy="18" r="16"></circle>
+          </svg>
+          <span id="combo-value">×1.5</span>
+        </div>
         <span class="footer-label">КОМБО</span>
       </div>
       <div id="level-display">

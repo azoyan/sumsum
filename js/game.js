@@ -209,6 +209,9 @@ class SumSumGame {
     // Создаём UI после показа экрана (канвас должен быть видим)
     if (!this.ui) {
       this.ui = new GameUI(this);
+    } else {
+      // Если UI уже существует, нужно перепривязать события
+      this.ui._setupInput();
     }
 
     this.reset();
@@ -276,28 +279,37 @@ class SumSumGame {
    * Полный сброс
    */
   reset() {
-    this.columns = [[], [], [], []];
-    this.queues = [[], [], [], []];
-    this.targets = [];
-    this.score = 0;
-    this.level = 1;
-    this.comboCount = 0;
-    this.lastMatchTime = 0;
-    this.targetsCleared = 0;
-    this._shaking = false;
-    this._pendingSpawnCol = -1;
-    this.isPlaying = false;
-    this.isPaused = false;
+    try {
+      this.columns = [[], [], [], []];
+      this.queues = [[], [], [], []];
+      this.targets = [];
+      this.score = 0;
+      this.level = 1;
+      this.comboCount = 0;
+      this.lastMatchTime = 0;
+      this.targetsCleared = 0;
+      this._shaking = false;
+      this._pendingSpawnCol = -1;
+      this.isPlaying = false;
+      this.isPaused = false;
 
-    this.generator.reset();
+      this.generator.reset();
 
-    if (this.animationFrame) {
-      cancelAnimationFrame(this.animationFrame);
-      this.animationFrame = null;
-    }
-    if (this.autoSaveInterval) {
-      clearInterval(this.autoSaveInterval);
-      this.autoSaveInterval = null;
+      if (this.animationFrame) {
+        cancelAnimationFrame(this.animationFrame);
+        this.animationFrame = null;
+      }
+      if (this.autoSaveInterval) {
+        clearInterval(this.autoSaveInterval);
+        this.autoSaveInterval = null;
+      }
+
+      // Очистка UI (только визуальная, без удаления слушателей)
+      if (this.ui) {
+        this.ui.floatingTexts = [];
+      }
+    } catch (e) {
+      console.error('Error during reset:', e);
     }
   }
 
@@ -305,43 +317,50 @@ class SumSumGame {
    * Обработка проигрыша
    */
   gameOver() {
-    this.isPlaying = false;
+    try {
+      if (!this.isPlaying) return; // Предотвращаем двойной вызов
 
-    // Звук
-    this.sound.gameOver();
-    Vibration.long();
+      this.isPlaying = false;
 
-    // Сохранение
-    const isNewRecord = this.storage.updateHighScore(this.score);
-    this.storage.recordGame(this.score, this.level, this.comboCount);
+      // Звук
+      this.sound.gameOver();
+      Vibration.long();
 
-    // Достижения по очкам
-    if (this.score >= 1000) this.storage.unlockAchievement('score1000');
-    if (this.score >= 5000) this.storage.unlockAchievement('score5000');
-    if (this.score >= 10000) this.storage.unlockAchievement('score10000');
+      // Сохранение
+      const isNewRecord = this.storage.updateHighScore(this.score);
+      this.storage.recordGame(this.score, this.level, this.comboCount);
 
-    // UI Game Over
-    document.getElementById('go-score').textContent = formatNumber(this.score);
-    document.getElementById('go-level').textContent = this.level;
-    document.getElementById('go-highscore').textContent = formatNumber(this.storage.data.highScore);
+      // Достижения по очкам
+      if (this.score >= 1000) this.storage.unlockAchievement('score1000');
+      if (this.score >= 5000) this.storage.unlockAchievement('score5000');
+      if (this.score >= 10000) this.storage.unlockAchievement('score10000');
 
-    if (isNewRecord) {
-      document.getElementById('go-new-record').classList.remove('hidden');
-    } else {
-      document.getElementById('go-new-record').classList.add('hidden');
-    }
+      // UI Game Over
+      document.getElementById('go-score').textContent = formatNumber(this.score);
+      document.getElementById('go-level').textContent = this.level;
+      document.getElementById('go-highscore').textContent = formatNumber(this.storage.data.highScore);
 
-    // Показать оверлей с задержкой для эффекта
-    setTimeout(() => {
-      this._showOverlay('gameover-overlay');
-    }, 600);
+      if (isNewRecord) {
+        document.getElementById('go-new-record').classList.remove('hidden');
+      } else {
+        document.getElementById('go-new-record').classList.add('hidden');
+      }
 
-    // Обновить меню
-    this._updateMenuStats();
+      // Показать оверлей с задержкой для эффекта
+      setTimeout(() => {
+        this._showOverlay('gameover-overlay');
+      }, 600);
 
-    // Остановить таймеры
-    if (this.autoSaveInterval) {
-      clearInterval(this.autoSaveInterval);
+      // Обновить меню
+      this._updateMenuStats();
+
+      // Остановить таймеры
+      if (this.autoSaveInterval) {
+        clearInterval(this.autoSaveInterval);
+        this.autoSaveInterval = null;
+      }
+    } catch (e) {
+      console.error('Error in gameOver:', e);
     }
   }
 
@@ -361,17 +380,22 @@ class SumSumGame {
 
       if (this.isPaused) return;
 
-      // 1. Обновить анимации
-      this._updateAnimations(timestamp);
+      try {
+        // 1. Обновить анимации
+        this._updateAnimations(timestamp);
 
-      // 2. Спаун кубиков
-      this._updateSpawn(timestamp);
+        // 2. Спаун кубиков
+        this._updateSpawn(timestamp);
 
-      // 3. Проверка комбо-таймаута
-      this._updateCombo(timestamp);
+        // 3. Проверка комбо-таймаута
+        this._updateCombo(timestamp);
 
-      // 4. Рендеринг
-      this.ui.render(timestamp);
+        // 4. Рендеринг
+        this.ui.render(timestamp);
+      } catch (e) {
+        console.error('Error in game loop:', e);
+        this.gameOver();
+      }
     };
 
     this.animationFrame = requestAnimationFrame(loop);
@@ -748,6 +772,36 @@ class SumSumGame {
       cube.selected = false;
       cube.removing = true;
       cube.removeProgress = 0;
+    }
+
+    // --- Проверка бонуса "Чистота" (все кубики удалены) ---
+    // Проверяем, останутся ли кубики на поле после удаления текущих
+    let remainingCubes = 0;
+    for (const col of this.columns) {
+      for (const cube of col) {
+        if (!cube.removing) {
+          remainingCubes++;
+        }
+      }
+    }
+
+    if (remainingCubes === 0) {
+      const cleanBonus = 1000 * this.level;
+      this.score += cleanBonus;
+      
+      // Показываем текст бонуса по центру экрана
+      const canvasW = this.ui.canvas.width / this.ui.dpr;
+      const canvasH = this.ui.canvas.height / this.ui.dpr;
+      
+      setTimeout(() => {
+        this.ui.addFloatingText(
+          `ЧИСТОТА! +${formatNumber(cleanBonus)}`,
+          canvasW / 2, canvasH / 2,
+          '#38bdf8' // Голубой цвет для бонуса
+        );
+        this.sound.levelUp(); // Используем звук повышения уровня для бонуса
+        Vibration.long();
+      }, 300); // Небольшая задержка, чтобы текст не сливался с очками за комбинацию
     }
 
     // --- Обновить цели ---
