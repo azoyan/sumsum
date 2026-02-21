@@ -385,6 +385,14 @@ html, body {
   z-index: 2;
 }
 
+.header-btn-help {
+  position: absolute;
+  left: 120px;
+  top: 50%;
+  transform: translateY(-50%);
+  z-index: 2;
+}
+
 .header-btn-sound .icon-sound-off {
   display: none;
 }

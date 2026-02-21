@@ -31,6 +31,12 @@ class SumSumGame {
     this.lastMatchTime = 0;
     /** @type {number} Количество собранных целей на уровне */
     this.targetsCleared = 0;
+    /** @type {boolean} Нужно ли начать игру после закрытия обучения */
+    this._tutorialStartGame = false;
+    /** @type {boolean} Нужно ли вернуться в текущую игру после обучения */
+    this._tutorialReturnToGame = false;
+    /** @type {boolean} Была ли игра поставлена на паузу кнопкой подсказки */
+    this._tutorialPausedByHelp = false;
 
     // --- Таймеры ---
     this.spawnTimer = 0;
@@ -70,24 +76,21 @@ class SumSumGame {
     // Обновить статистику на экране меню
     this._updateMenuStats();
 
-    // Первый запуск: показать обучение один раз
-    if (!this.storage.data.tutorialShown) {
-      this.storage.data.tutorialShown = true;
-      this.storage.save();
-      if (this.storage.data.totalGames === 0) {
-        this._showScreen('tutorial-screen');
-      }
-    }
-
     // === Кнопки ===
 
     // Меню
-    document.getElementById('btn-play').addEventListener('click', () => this._startGame());
-    document.getElementById('btn-how-to-play').addEventListener('click', () => this._showScreen('tutorial-screen'));
+    document.getElementById('btn-play').addEventListener('click', () => {
+      if (this.storage.data.tutorialShown) {
+        this._startGame();
+      } else {
+        this._openTutorial({ startGameAfter: true });
+      }
+    });
+    document.getElementById('btn-how-to-play').addEventListener('click', () => this._openTutorial());
     document.getElementById('btn-settings').addEventListener('click', () => this._showScreen('settings-screen'));
 
     // Обучение
-    document.getElementById('btn-tutorial-back').addEventListener('click', () => this._showScreen('menu-screen'));
+    document.getElementById('btn-tutorial-back').addEventListener('click', () => this._closeTutorial());
 
     // Настройки
     document.getElementById('btn-settings-back').addEventListener('click', () => {
@@ -110,6 +113,7 @@ class SumSumGame {
     const fsSetting = document.getElementById('fullscreen-setting');
     const fsGameBtn = document.getElementById('btn-fullscreen-game');
     const soundGameBtn = document.getElementById('btn-sound-game');
+    const helpGameBtn = document.getElementById('btn-help-game');
 
     const toggleFullscreen = () => {
       if (!document.fullscreenElement && !document.webkitFullscreenElement) {
@@ -137,6 +141,7 @@ class SumSumGame {
       document.addEventListener('webkitfullscreenchange', updateFsButtons);
     } else {
       soundGameBtn.style.left = '16px';
+      helpGameBtn.style.left = '68px';
     }
 
     this._updateSoundButton();
@@ -145,6 +150,10 @@ class SumSumGame {
       document.getElementById('setting-sound').checked = this.sound.enabled;
       this.storage.updateSettings({ sound: this.sound.enabled });
       this._updateSoundButton();
+    });
+
+    helpGameBtn.addEventListener('click', () => {
+      this._openTutorial({ returnToGame: true });
     });
 
     document.getElementById('btn-pause').addEventListener('click', () => this.pause());
@@ -181,6 +190,60 @@ class SumSumGame {
   _showScreen(screenId) {
     document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
     document.getElementById(screenId).classList.add('active');
+  }
+
+  /**
+   * Открыть экран обучения
+   * @param {Object} options
+   * @param {boolean} options.startGameAfter
+   * @param {boolean} options.returnToGame
+   * @private
+   */
+  _openTutorial({ startGameAfter = false, returnToGame = false } = {}) {
+    this._tutorialStartGame = startGameAfter;
+    this._tutorialReturnToGame = returnToGame;
+    this._tutorialPausedByHelp = false;
+
+    if (returnToGame && this.isPlaying && !this.isPaused) {
+      this.isPaused = true;
+      this._tutorialPausedByHelp = true;
+    }
+
+    this._showScreen('tutorial-screen');
+  }
+
+  /**
+   * Закрыть экран обучения и вернуться в нужный контекст
+   * @private
+   */
+  _closeTutorial() {
+    if (!this.storage.data.tutorialShown) {
+      this.storage.data.tutorialShown = true;
+      this.storage.save();
+    }
+
+    if (this._tutorialStartGame) {
+      this._tutorialStartGame = false;
+      this._tutorialReturnToGame = false;
+      this._tutorialPausedByHelp = false;
+      this._startGame();
+      return;
+    }
+
+    if (this._tutorialReturnToGame) {
+      const shouldResume = this._tutorialPausedByHelp;
+      this._tutorialStartGame = false;
+      this._tutorialReturnToGame = false;
+      this._tutorialPausedByHelp = false;
+      this._showScreen('game-screen');
+      if (shouldResume) this.resume();
+      return;
+    }
+
+    this._tutorialStartGame = false;
+    this._tutorialReturnToGame = false;
+    this._tutorialPausedByHelp = false;
+    this._showScreen('menu-screen');
   }
 
   /**
