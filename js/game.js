@@ -921,6 +921,26 @@ class SumSumGame {
       cube.removeProgress = 0;
     }
 
+    // --- Проверка бонуса "Умножитель" (все кубики одинаковые) ---
+    const allSameValue = cubes.length >= 2 && cubes.every(c => c.value === cubes[0].value);
+    if (allSameValue) {
+      const multiplierBonus = 1000 * this.level;
+      this.score += multiplierBonus;
+
+      const canvasW = this.ui.canvas.width / this.ui.dpr;
+      const canvasH = this.ui.canvas.height / this.ui.dpr;
+
+      setTimeout(() => {
+        this.ui.addFloatingText(
+          `УМНОЖИТЕЛЬ! +${formatNumber(multiplierBonus)}`,
+          canvasW / 2, canvasH / 2 - 25,
+          '#c084fc' // Фиолетовый цвет для бонуса
+        );
+        this.sound.levelUp();
+        Vibration.long();
+      }, 200);
+    }
+
     // --- Проверка бонуса "Чистота" (все кубики удалены) ---
     // Проверяем, останутся ли кубики на поле после удаления текущих
     let remainingCubes = 0;
@@ -937,18 +957,18 @@ class SumSumGame {
       this.score += cleanBonus;
       
       // Показываем текст бонуса по центру экрана
-      const canvasW = this.ui.canvas.width / this.ui.dpr;
-      const canvasH = this.ui.canvas.height / this.ui.dpr;
+      const canvasW2 = this.ui.canvas.width / this.ui.dpr;
+      const canvasH2 = this.ui.canvas.height / this.ui.dpr;
       
       setTimeout(() => {
         this.ui.addFloatingText(
           `ЧИСТОТА! +${formatNumber(cleanBonus)}`,
-          canvasW / 2, canvasH / 2,
+          canvasW2 / 2, canvasH2 / 2,
           '#38bdf8' // Голубой цвет для бонуса
         );
         this.sound.levelUp(); // Используем звук повышения уровня для бонуса
         Vibration.long();
-      }, 300); // Небольшая задержка, чтобы текст не сливался с очками за комбинацию
+      }, 400); // Увеличена задержка, чтобы не сливался с "Умножитель"
     }
 
     // --- Обновить цели ---
